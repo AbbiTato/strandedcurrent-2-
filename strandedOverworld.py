@@ -94,6 +94,9 @@ class pMember:
                 self.eAmr = equipment(row["startAMR"])
                 self.eAcc = equipment(startAcc)
                 self.eType = row["eType"]
+                if self.eType == "Hero":
+                    self.bCount = 20
+                    self.sCount = 20
                 if row["startSpells"] == "None":
                     self.spellList = []
                 else:
@@ -666,6 +669,8 @@ def updatedParty(partyLst, updates):
         partyLst[i].cMP = updates[0][i].cMP
         partyLst[i].MP = updates[0][i].MP
         partyLst[i].gainEXP(updates[1])
+    partyLst[0].bCount = updates[0][0].bCount
+    partyLst[0].bCount = updates[0][0].sCount
     return partyLst
     
 

@@ -21,8 +21,9 @@ def print(*strings):
     except curses.error:
         pass
 
+
 class combattant:
-    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT):
+    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, bCount = False, sCount = False):
         self.sprID = sprID
         self.Name = Name
         self.HP = HP
@@ -38,6 +39,9 @@ class combattant:
         self.oATK = self.ATK
         self.oDEF = self.DEF
         self.omATK = mATK
+        if bCount!=False:
+            self.bCount = bCount
+            self.sCount = sCount
 
     def takeDamage(self, eATK, crit):
         dtotal = max((eATK - self.DEF), 1)
@@ -140,6 +144,17 @@ class enemy(combattant):
             elif a[6] == "partyAll":
                 for i in range(len(epresentLst)):
                     cast(a, self, epresentLst[i])
+    
+    def loadConvo(self):
+        string = "talkData\\"+self.Name+".csv"
+        finalLst = []
+        f = open(string)
+        g = csv.DictReader(f)
+        for line in g:
+            finalLst.append(line)
+        f.close()
+        return finalLst
+
 
 
 
@@ -416,6 +431,8 @@ def battle(playerLst, enemLst):
     spellsDict = loadspells()
     cOption = 1
     turn = 1
+    runPower = 20
+    totalEXP = 0
     while(battleContinue):
         stdscr.clear() 
         spellsDict = loadspells()
@@ -464,13 +481,23 @@ def battle(playerLst, enemLst):
                             break
         
             elif(cOption == 3):       
-                print("The enemy is too strong! Can't run")
-                waitSpace()
+                x = randint(1, runPower)
+                if x<10:
+                    print("Escaped Successfully")
+                    waitSpace()
+                    battleContinue = False
+                    break
+                else:
+                    print("Run Failed!")
+                    waitSpace()
+                    turn = (len(playerLst)+1)
+                    runPower-=3
             elif(cOption == 4):
-                print("The enemy doesn't seem to want to talk...")
-                waitSpace()
+                a = targetMenu(enemLst)
+                if a!=False:
+                    x = convoMenu(a, playerLst[0])
             if(allDed(enemLst) == True):
-                    totalEXP = 0
+                    
                     for i in range(len(enemLst)):
                         totalEXP+=enemLst[i].expYield
                     print("Victory! You recieved ",  totalEXP," EXP")
@@ -496,6 +523,8 @@ def battle(playerLst, enemLst):
             cOption +=  4
     return playerLst, totalEXP
 
+def convoMenu(target, mc):
+    c = target.loadConvo()
 
 
             

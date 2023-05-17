@@ -5,6 +5,7 @@ import random
 from random import randint
 import csv 
 import os
+from strandedOverworld import getMenuChoice
 
 cmd = 'mode 160,50'
 os.system(cmd)
@@ -23,8 +24,9 @@ def print(*strings):
 
 
 class combattant:
-    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, bCount = False, sCount = False):
+    def __init__(self, sprID, Level, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, bCount = False, sCount = False):
         self.sprID = sprID
+        self.Level = Level
         self.Name = Name
         self.HP = HP
         self.MP = MP 
@@ -115,6 +117,8 @@ class enemy(combattant):
                 self.oATK = self.ATK
                 self.oDEF = self.DEF
                 self.omATK = self.mATK
+                self.convType = row["convType"]
+                self.demand = int(row["demand"])
         f.close()
             
     def selectAction(self, playerLst, enemLst, dict):     
@@ -495,9 +499,12 @@ def battle(playerLst, enemLst):
             elif(cOption == 4):
                 a = targetMenu(enemLst)
                 if a!=False:
-                    x = convoMenu(a, playerLst[0])
+                    if a.demand / ((playerLst[0].CHA+1) / 5) < 10:
+                        print("You don't think you know how to talk to this enemy yet...")
+                    else:
+                        x = convoMenu(a, playerLst[0])
+                        turn+=1
             if(allDed(enemLst) == True):
-                    
                     for i in range(len(enemLst)):
                         totalEXP+=enemLst[i].expYield
                     print("Victory! You recieved ",  totalEXP," EXP")
@@ -523,8 +530,95 @@ def battle(playerLst, enemLst):
             cOption +=  4
     return playerLst, totalEXP
 
+def chooseDemand():
+    cOption = 0
+    isDone = False
+    optionsLst = ["Join me", "Teach me a spell", "Give me something cool"]
+    cpositx = stdscr.getyx()[1]
+    cposity = stdscr.getyx()[0]
+    while(isDone==False):
+        clearToLine(cposity, cpositx)
+        x = getMenuChoice(cOption, 3)
+        if x == -1:
+            return False
+        elif x ==-2:
+            return optionsLst[cOption]
+        else:
+            cOption = x
+        for i in range(3):
+            choice = " "
+            if i==cOption:
+                choice = ">"
+            choice+=optionsLst[i]
+            print(choice)
+
+def makeDemandMeter(demandPosit):
+    totalStr = "["
+    for i in range(10):
+        if i == demandPosit:
+            totalStr+"|"
+        else:
+            totalStr+=" "
+    totalStr +="]"
+    return totalStr
+
+
+
+
+
 def convoMenu(target, mc):
-    c = target.loadConvo()
+    convoData = target.loadConvo()
+    lenience = (10-target.demand)
+    dChoice = chooseDemand()
+    demandPosit = 1
+    if dChoice == False:
+        return False
+    isDone = False
+    cpositx = stdscr.getyx()[1]
+    cposity = stdscr.getyx()[0]
+    while(isDone == False):
+        clearToLine(cposity, cpositx)
+        print(makeDemandMeter(demandPosit))
+        if demandPosit == target.demand:
+            if target.convType == "Carnivore":
+                dString = " Blood and Bones"
+            if dChoice == "Give me something cool":
+                print("The monster acquiesces to your demands!")
+                payout = target.demand * mc.CHA
+                print("You get ", payout, " sticks and stones!")
+                mc.sCount += payout
+                return mc, False
+            else:
+                dCost = max(((target.demand * mc.Level) - mc.CHA), 1)
+                print("The monster acquiesces to your demands, in exchange for ", dCost," ", dString, ". Accept? (Z to accept, X to refuse")
+                event = keyboard.read_event()
+                if event.event_type == keyboard.KEY_DOWN and event.name == 'Z':
+                    if target.convType == "Carnivore" and (target.demand * mc.Level) > mc.bCount:
+                        print("But you didn't have enough...")
+                    else:
+                        mc.bCount - (target.demand * mc.Level)
+                        if dChoice == "Teach me a spell":
+                            mc.learnSpell(target.teachSpell)
+                            return mc, False
+                        else:
+                            return mc, True
+                elif event.event_type == keyboard.KEY_DOWN and event.name == 'X':
+                    pass
+                payout = target.demand * mc.CHA
+                print("The monster gives you something else instead... You get ", payout, " sticks and stones!")
+                mc.sCount += payout
+                return mc, False
+        demandPosit = askQuestion(mc, convoData, demandPosit)
+
+def askQuestion(mc, convoData):
+    pass
+                
+
+                
+
+
+
+
 
 
             

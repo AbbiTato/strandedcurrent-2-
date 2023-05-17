@@ -237,7 +237,7 @@ class pMember:
             print(self.spellList[i])
     
     def makeCombattant(self):
-        return ally(self.sprID, self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT, self.spellList)
+        return ally(self.sprID, self.Level, self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT, self.spellList)
 
 
 
@@ -309,7 +309,7 @@ def getMenuChoice(cOption, optionsCount):
         if cOption <0:
                 cOption = optionsCount -1
         return cOption
-    elif event.event_type == keyboard.KEY_DOWN and event.name == 'x'  :
+    elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
         return -1
     elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
         return -2
@@ -485,7 +485,6 @@ def equipView(pMember, equipInventory):
     clearToLine(cposity, cpositx)
     return pMember, equipInventory
 
-##bugged for more than 2 bits of equipment, fix
 def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
     if eChoice == 0:
         eChoice = "Weapon"

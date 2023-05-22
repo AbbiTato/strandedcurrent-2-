@@ -2,7 +2,7 @@ import keyboard
 import curses
 import random
 
-from random import randint
+from random import randint, shuffle
 import csv 
 import os
 from strandedOverworld import getMenuChoice
@@ -162,14 +162,79 @@ class enemy(combattant):
 
 
 
+
 class ally(combattant):
     def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, spellList = []):
         super().__init__(sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT)
         self.spellList = spellList
         self.oATK = self.ATK
         self.oDEF = self.DEF
+    def learnSpell(self, spell):
+        if len(self.spellList) <8:
+            self.spellList.append(spell)
+            print("You learned ", spell)
+        else:
+            print("You can't learn any more spells! Which spell would you like to forget?")
+            running = True
+            cOption = 0
+            cPosits = returnCposits()
+            nineLst = self.spellList
+            nineLst.append(spell)
+            while(running):
+                clearToLine(cPosits)
+                for i in range(len(nineLst)):
+                    cString = " "
+                    if i == cOption:
+                        cString = ">"
+                    cString+=nineLst[i]
+                    print(cString)
+                choice = getMenuChoice(cOption, len(nineLst))
+                if choice == -2:
+                    nineLst.pop(cOption)
+                    self.spellList = nineLst
+                else:
+                    cOption = choice
+        
+
+
+
+
+
+def returnCposits():
+    return stdscr.getyx()[1], stdscr.getyx()[0]     
+
+            
+
 
         
+def makeOptionsMenu(optionsLst):
+    cOption = 0
+    isGoing = True 
+    cposits = returnCposits()
+    while(isGoing):
+        clearToLine(cposits)
+        for i in range(len(optionsLst)):
+            cString = " "
+            if cOption == i:
+                cString = ">"
+            cString+=optionsLst[i]
+            print(cString)
+        event = keyboard.read_event()
+        if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
+            cOption += 1
+        elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
+            cOption -= 1
+        elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
+             return False
+        elif event.event_type == keyboard.KEY_DOWN and event.name == 'z':
+            return optionsLst[cOption]
+        if(cOption <0):
+            cOption = len(optionsLst)
+        if(cOption >=len(optionsLst)):
+            cOption = 0 
+        
+
+
 
 
 def returnHPstring(ent, ally = True):
@@ -217,28 +282,21 @@ def targetMenu(entLst):
         if (entLst[i].isDed() == False):
             targsLst.append(entLst[i])
     cOption = 0
-    cpositx = stdscr.getyx()[1]
-    cposity = stdscr.getyx()[0]
+    cposits = returnCposits()
     while(goBack == False):
-        clearToLine(cposity, cpositx)
+        clearToLine(cposits)
         for i in range(len(targsLst)):      
              if(i == cOption):                        
                 print(">"+targsLst[i].Name)
              else:
                 print(" "+targsLst[i].Name)       
-        event = keyboard.read_event()
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
-            cOption += 1
-        elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
-            cOption -= 1
-        elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
+        choice = getMenuChoice(cOption)
+        if choice == -1:
              return False
-        elif event.event_type == keyboard.KEY_DOWN and event.name == 'z':
-            return targsLst[cOption]                  
-        if(cOption <0):
-            cOption = 3 
-        if(cOption >=len(targsLst)):
-            cOption = 0 
+        elif choice == -2:
+            return targsLst[cOption]        
+        else:
+            cOption = choice          
         
 
 def printOnLine(entLst, array):
@@ -355,27 +413,22 @@ def spellsMenu(caster, partyLst, enemLst, dict):
     spellplist = []
     goBack = False
     cOption = 0
-    cpositx = stdscr.getyx()[1]
-    cposity = stdscr.getyx()[0]
+    cposits = returnCposits()
     for i in range(len(caster.spellList)):
         spellplist.append(getSpellProperties(caster.spellList[i], dict))
     while(goBack == False):
         t = True
-        clearToLine(cposity, cpositx)
+        clearToLine(cposits)
         for i in range(len(spellplist)):
              if(i == cOption):
                 print(">"+str(spellplist[i][0])+ "["+ str(spellplist[i][1])+ "]") 
              else:
                  print(str(spellplist[i][0])+ "["+ str(spellplist[i][1])+ "]") 
         print("MP: "+str(caster.cMP)+"/"+str(caster.MP))
-        event = keyboard.read_event()
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
-            cOption += 1
-        elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
-            cOption -= 1
-        elif event.event_type == keyboard.KEY_DOWN and event.name == 'x'  :
+        choice = getMenuChoice(cOption, len(caster.spellList))
+        if choice==-1:
              return False
-        elif event.event_type == keyboard.KEY_DOWN and event.name == 'z':
+        elif choice == -2:
             if (caster.cMP < spellplist[cOption][1]):
                 print("Not enough MP")
                 waitSpace()
@@ -399,10 +452,9 @@ def spellsMenu(caster, partyLst, enemLst, dict):
                                 cast(spellplist[cOption], caster, partyLst[i])
                 if t!=False:     
                     goBack = True         
-                    return True      
-                                                      
-        if cOption>=len(spellplist):
-            cOption = 0
+                    return True    
+        else:
+            cOption = choice
     return True
 
                    
@@ -414,8 +466,8 @@ def allDed(entLst):
             return False
     return True
 
-def clearToLine(posity, positx):
-    stdscr.move(posity, positx)
+def clearToLine(posits):
+    stdscr.move(posits[0], posits[1])
     stdscr.clrtobot()
 
 def getRealCurrentPlayerName(playerLst, turn):
@@ -534,10 +586,9 @@ def chooseDemand():
     cOption = 0
     isDone = False
     optionsLst = ["Join me", "Teach me a spell", "Give me something cool"]
-    cpositx = stdscr.getyx()[1]
-    cposity = stdscr.getyx()[0]
+    cposits = returnCposits()
     while(isDone==False):
-        clearToLine(cposity, cpositx)
+        clearToLine(cposits)
         x = getMenuChoice(cOption, 3)
         if x == -1:
             return False
@@ -608,10 +659,32 @@ def convoMenu(target, mc):
                 print("The monster gives you something else instead... You get ", payout, " sticks and stones!")
                 mc.sCount += payout
                 return mc, False
-        demandPosit = askQuestion(mc, convoData, demandPosit)
+        demandPosit = askQuestion(mc, convoData, demandPosit)[0]
 
-def askQuestion(mc, convoData):
-    pass
+def askQuestion(mc, convoData, demandPosit):
+    quesNum = randint(1, len(convoData))
+    questData = convoData[quesNum]
+    convoData.pop(quesNum)
+    if questData["question"][-1] == "!":
+        questData["question"] = questData["question"][:-1]
+        mc.takeDamage(questData["question"][-1], False)
+        if mc.cHP <=0:
+            print("You held on for the rest of this conversation...")
+            mc.cHP = 1
+        waitSpace()
+        questData["question"] = questData["question"][:-1]
+        
+    print(questData["question"])
+    cposits = returnCposits()
+    running = True
+
+    while(running):
+        pass
+        
+
+    return mc, convoData, (demandPosit+1)
+    
+
                 
 
                 

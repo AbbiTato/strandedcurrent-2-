@@ -2,7 +2,7 @@ import keyboard
 import curses
 import csv
 import os
-from strandedBattle import returnHPstring, waitSpace, loadsprites, ally, enemy, battle
+from strandedBattle import returnHPstring, waitSpace, loadsprites, ally, enemy, battle, clearToLine, returnCposits
 from random import randint
 
 
@@ -270,12 +270,6 @@ def printCol(string, color):
     except curses.error:
         pass
 
-
-
-def clearToLine(posity, positx):
-    stdscr.move(posity, positx)
-    stdscr.clrtobot()
-
 def importUIData():
     totalLst = []
     f = open("UIdata.txt")
@@ -362,10 +356,9 @@ def itemUseInventory(item, pLst):
     if item.tossable == True:
         oList.append("Toss")
     oList.append("Back")
-    cpositx = stdscr.getyx()[1]
-    cposity = stdscr.getyx()[0]
+    cposits = returnCposits()
     while (goBack == False):
-        clearToLine(cposity, cpositx)
+        clearToLine(cposits)
         for i in range(len(oList)):
             cPrint = " "
             if i==cOption:
@@ -394,12 +387,11 @@ def itemUseInventory(item, pLst):
             cOption = choice
 
 def partyChoice(item, pLst):
-    cpositx = stdscr.getyx()[1]
-    cposity = stdscr.getyx()[0]
+    cposits = returnCposits()
     cOption = 0
     goBack = False
     while(goBack == False):
-        clearToLine(cposity, cpositx)
+        clearToLine(cposits)
         for i in range(len(pLst)):
             cString = " "
             if i == cOption:
@@ -454,12 +446,11 @@ def equipLoop(pLst, equipInventory):
     return pLst, equipInventory
 
 def equipView(pMember, equipInventory):
-    cpositx = stdscr.getyx()[1]
-    cposity = stdscr.getyx()[0]
+    cposits = returnCposits()
     cOption = 0
     goBack = False
     while(goBack == False):
-        clearToLine(cposity, cpositx)
+        clearToLine(cposits)
         print("-----------------")
         dLst = [("Weapon: " + pMember.eWpn.Name), ("Armour: " + pMember.eAmr.Name), ("Accessory: " + pMember.eAcc.Name)]
         for i in range(3):
@@ -479,10 +470,10 @@ def equipView(pMember, equipInventory):
             x = equipChangeMenu(pMember, equipInventory, cOption, cpositx2, cposity2)
             pMember = x[0]
             equipInventory = x[1]
-            clearToLine(cposity, cpositx)
+            clearToLine(cposits)
         else:
             cOption = choice
-    clearToLine(cposity, cpositx)
+    clearToLine(cposits)
     return pMember, equipInventory
 
 def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):

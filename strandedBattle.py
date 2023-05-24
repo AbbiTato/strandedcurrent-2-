@@ -752,8 +752,8 @@ def askQuestion(mc, convoData, demandPosit):
             print(cString)
         choice = getMenuChoice(cOption, 3)
         if choice == -2:
-            if (iptedLst[cOption][1] == "*" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)) or (iptedLst[cOption][1] == "$" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)):
-                print("But you didn't have enough...")
+            if (iptedLst[cOption][1] == "*" and mc.bCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)) or (iptedLst[cOption][1] == "$" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)):
+                print("But you didn't have enough...", max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1), )
                 waitSpace()
             else:
                 if iptedLst[cOption][3] == "Correct":

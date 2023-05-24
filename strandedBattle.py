@@ -141,9 +141,10 @@ class enemy(combattant):
         epresentLst = []
         ppresentLst = []             
         for i in range(len(playerLst)):
-            if playerLst[i] != False:     
+            if playerLst[i].isDed() == False:     
                 ppresentLst.append(playerLst[i])
-            if enemLst[i] != False:            
+        for i in range(len(enemLst)):
+            if enemLst[i].isDed() == False:            
                 epresentLst.append(enemLst[i])         
         act = self.aLst[randint(0, 7)]
         etarg = epresentLst[randint(0, len(epresentLst)-1)]      
@@ -691,7 +692,7 @@ def convoMenu(target, mc):
                             waitSpace()
                             notDone = False
                         else:
-                            mc.bCount - (target.demand * mc.Level)
+                            mc.bCount -= (target.demand * mc.Level)
                         if target.convType == "Herbivore" and (target.demand * mc.Level) > mc.sCount:
                             print("But you didn't have enough...")
                             waitSpace()
@@ -752,7 +753,7 @@ def askQuestion(mc, convoData, demandPosit):
             print(cString)
         choice = getMenuChoice(cOption, 3)
         if choice == -2:
-            if (iptedLst[cOption][1] == "*" and mc.bCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)) or (iptedLst[cOption][1] == "$" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)):
+            if (iptedLst[cOption][1] == "*" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)) or (iptedLst[cOption][1] == "$" and mc.bCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)):
                 print("But you didn't have enough...", max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1), )
                 waitSpace()
             else:

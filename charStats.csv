@@ -2,5 +2,5 @@ sprID,Name,HPBase,MPBase,STRBase,INTBase,RESBase,CHABase,startWPN,startAMR,eType
 0,Fighter,10,0,7,8,3,0,Lead Pipe,Prison Rags,Hero,5,2,5,1,5,2,8,2,10,None
 0,Mage,5,5,3,0,0,2,Lead Pipe,Prison Rags,Hero,2,5,2,5,1,2,8,2,10,None
 0,Troubador,7,3,4,4,1,5,Lead Pipe,Prison Rags,Hero,3,3,3,3,3,5,8,2,10,"Cure,Blaze,DefDown"
-1,Florp,8,0,5,1,1,0,Tiny Knife,Dirt Coating ,Small,7,8,1,2,1,1,8,2,10,Fortify
+1,Florp,8,0,5,1,1,0,Tiny Knife,Dirt Coating,Small,7,8,1,2,1,1,8,2,10,Fortify
 2,Eyesoar,12,4,7,2,2,0,Wooden Spear,Dirt Coating,Medium,2,5,3,7,0,3,6,2,10,DefDown

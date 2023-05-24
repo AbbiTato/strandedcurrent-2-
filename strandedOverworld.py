@@ -663,6 +663,7 @@ def updatedParty(partyLst, updates):
         partyLst[i].cMP = updates[0][i].cMP
         partyLst[i].MP = updates[0][i].MP
         partyLst[i].gainEXP(updates[1])
+        partyLst[i].spellList = updates[0][i].spellList
     partyLst[0].bCount = updates[0][0].bCount
     partyLst[0].bCount = updates[0][0].sCount
     if updates[2] != False:

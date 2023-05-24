@@ -3,7 +3,7 @@ Lead Pipe,5,0,0,14,0,0,Weapon,Humanoid,A heavy leaden pipe. A symbol of your fur
 Tiny Knife,7,0,0,17,0,0,Weapon,Small,"A small knife. Sharp, but of poor construction"
 Wooden Spear,7,0,0,17,0,0,Weapon,Medium,"A sharpened branch, really "
 Stone Axe,7,0,0,17,0,0,Weapon,Large,A crude ax made from carved stone
-Dirt Coating ,0,0,0,0,0,0,Armour,All,A thin layer of dirt indicating how badly this beast needs a bath
+Dirt Coating,0,0,0,0,0,0,Armour,All,A thin layer of dirt indicating how badly this beast needs a bath
 Prison Rags,0,3,0,0,0,0,Armour,Humanoid,"The clothes from your days in prison, still stained with sweat"
 Florp Butler Outfit,0,5,0,0,4,0,Armour,Small,What a fetching little guy
 Wooden Charm,0,2,0,0,0,0,Accessory,All,A relic of a peaceful time you barely remember

@@ -62,7 +62,7 @@ class combattant:
     def takeDamage(self, eATK, crit):
         dtotal = max((eATK - self.DEF), 1)
         if crit == True:
-            dtotal = eATK * 2
+            dtotal = max((eATK * 2), 2)
         print(self.Name+ " took "+  str(dtotal)+ " points of damage!")
         waitSpace()
         self.cHP -= (dtotal)
@@ -133,6 +133,7 @@ class enemy(combattant):
                 self.omATK = self.mATK
                 self.convType = row["convType"]
                 self.demand = int(row["demand"])
+                self.teachSpell = row["teachSpell"]
         f.close()
             
     def selectAction(self, playerLst, enemLst, dict):     
@@ -189,30 +190,34 @@ class ally(combattant):
             self.bCount = bCount
             self.sCount = sCount
     def learnSpell(self, spell):
-        if len(self.spellList) <8:
-            self.spellList.append(spell)
-            print("You learned ", spell)
+        if (spell in self.spellList):
+            print("You already know that spell...")
+            waitSpace()
         else:
-            print("You can't learn any more spells! Which spell would you like to forget?")
-            running = True
-            cOption = 0
-            cPosits = returnCposits()
-            nineLst = self.spellList
-            nineLst.append(spell)
-            while(running):
-                clearToLine(cPosits)
-                for i in range(len(nineLst)):
-                    cString = " "
-                    if i == cOption:
-                        cString = ">"
-                    cString+=nineLst[i]
-                    print(cString)
-                choice = getMenuChoice(cOption, len(nineLst))
-                if choice == -2:
-                    nineLst.pop(cOption)
-                    self.spellList = nineLst
-                else:
-                    cOption = choice
+            if len(self.spellList) <8:
+                self.spellList.append(spell)
+                print("You learned ", spell)
+            else:
+                print("You can't learn any more spells! Which spell would you like to forget?")
+                running = True
+                cOption = 0
+                cPosits = returnCposits()
+                nineLst = self.spellList
+                nineLst.append(spell)
+                while(running):
+                    clearToLine(cPosits)
+                    for i in range(len(nineLst)):
+                        cString = " "
+                        if i == cOption:
+                            cString = ">"
+                        cString+=nineLst[i]
+                        print(cString)
+                    choice = getMenuChoice(cOption, len(nineLst))
+                    if choice == -2:
+                        nineLst.pop(cOption)
+                        self.spellList = nineLst
+                    else:
+                        cOption = choice
         
 
 
@@ -220,7 +225,7 @@ class ally(combattant):
 
 
 def returnCposits():
-    return stdscr.getyx()[1], stdscr.getyx()[0]     
+    return stdscr.getyx()[0], stdscr.getyx()[1]     
 
             
 
@@ -549,7 +554,7 @@ def battle(playerLst, enemLst):
             elif(cOption == 2):
                  if (spellsMenu(playerLst[turn-1], playerLst, enemLst,  spellsDict) == True):     
                      turn+=1
-                     while(turn<5):
+                     while(turn<(len(playerLst) +1)):
                         if playerLst[turn-1].isDed == True:
                             turn+=1
                         else:
@@ -602,8 +607,7 @@ def battle(playerLst, enemLst):
                 if(allDed(playerLst) == True):
                     print("The party was defeated! Game over")                               
                     waitSpace()
-                    battleContinue = False
-                    break
+                    exit("Battle Lost")
                 turn = 1
               
         if (cOption >= 5):                      
@@ -636,8 +640,8 @@ def chooseDemand():
 def makeDemandMeter(demandPosit):
     totalStr = "["
     for i in range(10):
-        if i == demandPosit:
-            totalStr+"|"
+        if i >= demandPosit:
+            totalStr+"I"
         else:
             totalStr+=" "
     totalStr +="]"
@@ -648,6 +652,7 @@ def makeDemandMeter(demandPosit):
 
 
 def convoMenu(target, mc):
+    stdscr.clear()
     convoData = target.loadConvo()
     lenience = -(10-target.demand)
     dChoice = chooseDemand()
@@ -655,11 +660,12 @@ def convoMenu(target, mc):
     if dChoice == False:
         return False
     isDone = False
+    
     cposits = returnCposits()
     while(isDone == False):
         clearToLine(cposits)
         print(makeDemandMeter(demandPosit))
-        if demandPosit == target.demand:
+        if demandPosit >= target.demand:
             if target.convType == "Carnivore":
                 dString = " Blood and Bones"
             if dChoice == "Give me something cool":
@@ -709,7 +715,7 @@ def convoMenu(target, mc):
         mc = a[0]
 
 def askQuestion(mc, convoData, demandPosit):
-    quesNum = randint(1, len(convoData))
+    quesNum = randint(0, (len(convoData)-1))
     questData = convoData[quesNum]
     convoData.pop(quesNum)
     if questData["question"][-1] == "!":
@@ -720,7 +726,6 @@ def askQuestion(mc, convoData, demandPosit):
             mc.cHP = 1
         waitSpace()
         questData["question"] = questData["question"][:-1]
-        
     cposits = returnCposits()
     running = True
     iptedLst = [qInterpret(questData["ansCorrect"], mc.Level, mc.CHA, "Correct"), qInterpret(questData["ansNeutral"], mc.Level, mc.CHA, "Neutral"), qInterpret(questData["ansIncorrect"], mc.Level, mc.CHA, "Incorrect")]

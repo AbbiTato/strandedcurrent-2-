@@ -644,11 +644,11 @@ def chooseDemand():
             choice+=optionsLst[i]
             print(choice)
 
-def makeDemandMeter(demandPosit):
-    totalStr = "["
-    for i in range(10):
-        if i >= demandPosit:
-            totalStr+"I"
+def makeDemandMeter(demandPosit, lenience, demand):
+    totalStr = "Progress: ["
+    for i in range(lenience, demand):
+        if i == (demandPosit):
+            totalStr+="I"
         else:
             totalStr+=" "
     totalStr +="]"
@@ -667,11 +667,10 @@ def convoMenu(target, mc):
     if dChoice == False:
         return False
     isDone = False
-    
     cposits = returnCposits()
     while(isDone == False):
         clearToLine(cposits)
-        print(makeDemandMeter(demandPosit))
+        print(makeDemandMeter(demandPosit, lenience, target.demand))
         if demandPosit >= target.demand:
             if target.convType == "Carnivore":
                 dString = " Blood and Bones"
@@ -712,11 +711,10 @@ def convoMenu(target, mc):
                 mc.sCount += payout
                 waitSpace()
                 return mc, False
-        elif demandPosit < lenience:
+        elif (demandPosit < lenience) or (len(convoData) == 0):
             print("Negotiations Broke Down...")
             waitSpace()
             return mc, False
-
         a = askQuestion(mc, convoData, demandPosit)
         demandPosit = a[1]
         mc = a[0]
@@ -749,11 +747,11 @@ def askQuestion(mc, convoData, demandPosit):
             print(cString)
         choice = getMenuChoice(cOption, 3)
         if choice == -2:
-            if (iptedLst[1] == "£" and mc.sCount < max((iptedLst[2]*mc.Level - mc.CHA), 1)) or (iptedLst[1] == "$" and mc.sCount < max((iptedLst[2]*mc.Level - mc.CHA), 1)):
+            if (iptedLst[cOption][1] == "£" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)) or (iptedLst[cOption][1] == "$" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)):
                 print("But you didn't have enough...")
             else:
                 if iptedLst[cOption][3] == "Correct":
-                    demandPosit+=1
+                    demandPosit+=(1 + (int(mc.CHA / 5)))
                     print("They seemed to like that")
                 elif iptedLst[cOption][3] == "Incorrect":
                     demandPosit-=1
@@ -761,19 +759,19 @@ def askQuestion(mc, convoData, demandPosit):
                 else:
                     print("They seemed to have no strong feelings about that")
                 waitSpace()
-                if iptedLst[1] == "!":
-                    mc.takeDamage(iptedLst[2], False)
+                if iptedLst[cOption][1] == "!":
+                    mc.takeDamage(iptedLst[cOption][2], False)
                     if mc.cHP <=0:
                         print("You held on for the rest of this conversation...")
                         mc.cHP = 1
                     waitSpace()
-                elif iptedLst[1] == "£":
-                    mc.sCount -= max((iptedLst[2]*mc.Level - mc.CHA), 1)
+                elif iptedLst[cOption][1] == "£":
+                    mc.sCount -= max((iptedLst[1][2]*mc.Level - mc.CHA), 1)
                     print("You used some sticks and stones")
-                elif iptedLst[1] == "$":
-                    mc.bCount -= max((iptedLst[2]*mc.Level - mc.CHA), 1)
+                elif iptedLst[cOption][1] == "$":
+                    mc.bCount -= max((iptedLst[1][2]*mc.Level - mc.CHA), 1)
                     print("You used some blood and bones")
-                elif iptedLst[1] == "%":
+                elif iptedLst[cOption][1] == "%":
                     mc.ATK = min(int(mc.oATK * 0.3), int(mc.ATK * 0.7))
                     print("You lost some attack power")
                 return [mc, demandPosit]
@@ -800,17 +798,6 @@ def qInterpret(q, pLVL, pCHA, correctNess):
     else:
         return q, "", "", correctNess
         
-
-
-                
-
-
-
-
-
-
-            
-
 def loadsprites():        
     f = open("monsters.txt")
     sprarray = []

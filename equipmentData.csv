@@ -1,5 +1,5 @@
 Name,aBonus,dBonus,mBonus,HIT,eBonus,cBonus,slot,eType,desc
-Lead Pipe,5,0,0,14,0,0,Weapon,Humanoid,A heavy leaden pipe. A symbol of your furious rebellion
+Lead Pipe,5,0,0,14,0,0,Weapon,Hero,A heavy leaden pipe. A symbol of your furious rebellion
 Tiny Knife,7,0,0,17,0,0,Weapon,Small,"A small knife. Sharp, but of poor construction"
 Wooden Spear,7,0,0,17,0,0,Weapon,Medium,"A sharpened branch, really "
 Stone Axe,7,0,0,17,0,0,Weapon,Large,A crude ax made from carved stone
@@ -8,7 +8,7 @@ Prison Rags,0,3,0,0,0,0,Armour,Humanoid,"The clothes from your days in prison, s
 Florp Butler Outfit,0,5,0,0,4,0,Armour,Small,What a fetching little guy
 Wooden Charm,0,2,0,0,0,0,Accessory,All,A relic of a peaceful time you barely remember
 Small Rock,2,0,0,0,0,0,Accessory,All,Many monsters find and grow attacked to small pebbles they find
-Spiked Branch,8,0,0,18,0,1,Weapon,Humanoid,A thorn covered branch. Make sure you hold the right end
+Spiked Branch,8,0,0,18,0,1,Weapon,Hero,A thorn covered branch. Make sure you hold the right end
 Iron Band,12,12,0,0,0,0,Accessory,All,This small iron band has a pleasing coolness
 Clown Costume,9999,9999,0,0,19,19,Armour,All,Become the silliest of them all
 Leather Pelt,2,8,0,0,1,0,Armour,Humanoid,A simple pelt made from animal leather

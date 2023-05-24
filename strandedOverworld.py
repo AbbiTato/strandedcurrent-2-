@@ -95,11 +95,11 @@ class pMember:
                 self.eAcc = equipment(startAcc)
                 self.eType = row["eType"]
                 if self.eType == "Hero":
-                    self.bCount = 20
-                    self.sCount = 20
+                    self.bCount = 0
+                    self.sCount = 0
                 else:
-                    self.bCount = False
-                    self.sCount = False
+                    self.bCount = -1
+                    self.sCount = -1
                 if row["startSpells"] == "None":
                     self.spellList = []
                 else:
@@ -224,6 +224,9 @@ class pMember:
     def printStats(self):
         print(self.Name, "  LVL:", self.Level)
         print("EXP:", self.EXP, " To Next: ", (EXPvals[self.Level] - self.EXP))
+        if self.sCount != -1:
+            print("Sticks and Stones: ", self.sCount)
+            print("Blood and Bones: ", self.bCount)
         print(returnHPstring(self, True))
         print("MP: ", self.cMP, "/", self.MP)
         print("STR: ", self.STR)
@@ -236,8 +239,8 @@ class pMember:
         print("DODGE: ", a[1],"%")
         print("CRIT: ", a[2],"%")
         print("[[[SPELLS:]]]")
-        for i in range(len(self.spellList)):
-            print(self.spellList[i])
+        for spell in self.spellList:
+            print(spell)
     
     def makeCombattant(self):
         return ally(self.sprID,self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT,  self.Level, self.CHA, self.spellList, self.bCount, self.sCount)
@@ -493,7 +496,7 @@ def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
     goBack = False
     cOption = 0
     while(goBack == False):
-        clearToLine(cposity, cpositx)
+        clearToLine([cpositx, cposity])
         pMember.printStats()
         print("")
         print("-----------------")
@@ -664,10 +667,10 @@ def updatedParty(partyLst, updates):
         partyLst[i].MP = updates[0][i].MP
         partyLst[i].gainEXP(updates[1])
         partyLst[i].spellList = updates[0][i].spellList
-    partyLst[0].bCount = updates[0][0].bCount
-    partyLst[0].bCount = updates[0][0].sCount
-    if updates[2] != False:
-        partyLst.append(pMember(updates[2]))
+    partyLst[0].bCount = updates[0][0].bCount + updates[2]
+    partyLst[0].sCount = updates[0][0].sCount
+    if updates[3] != False:
+        partyLst.append(pMember(updates[3]))
     return partyLst
     
 

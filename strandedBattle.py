@@ -128,6 +128,7 @@ class enemy(combattant):
                 self.CRIT = int(row["CRIT"])
                 self.aLst = [row["Mov1"], row["Mov2"], row["Mov3"], row["Mov4"], row["Mov5"], row["Mov6"], row["Mov7"], row["Mov8"]]
                 self.expYield = int(row["expYield"])
+                self.bYield = int(row["bYield"])
                 self.oATK = self.ATK
                 self.oDEF = self.DEF
                 self.omATK = self.mATK
@@ -179,14 +180,14 @@ class enemy(combattant):
 
 
 class ally(combattant):
-    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, Level, CHA, spellList = [], bCount = False, sCount = False):
+    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, Level, CHA, spellList = [], bCount = -1, sCount = -1):
         super().__init__(sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT)
         self.spellList = spellList
         self.oATK = self.ATK
         self.oDEF = self.DEF
         self.Level = Level
         self.CHA = CHA
-        if bCount!=False:
+        if bCount!=-1:
             self.bCount = bCount
             self.sCount = sCount
     def learnSpell(self, spell):
@@ -457,22 +458,26 @@ def spellsMenu(caster, partyLst, enemLst, dict):
                 print("Not enough MP")
                 waitSpace()
             else:
-                caster.cMP -= spellplist[cOption][1]
+                
                 if spellplist[cOption][6] == "enemOne":
                     t = targetMenu(enemLst)
                     if t!=False:
+                        caster.cMP -= spellplist[cOption][1]
                         cast(spellplist[cOption], caster, t) 
                 elif spellplist[cOption][6] == "enemAll":
-                    for i in range(4):
-                        if enemLst[i]!= False:
+                    caster.cMP -= spellplist[cOption][1]
+                    for i in range(len(enemLst)):
+                        if enemLst[i].isDed() ==False:
                             cast(spellplist[cOption], caster, enemLst[i])
                 elif spellplist[cOption][6] == "partyOne":
                     t = targetMenu(partyLst)
                     if t!=False:
+                        caster.cMP -= spellplist[cOption][1]
                         cast(spellplist[cOption], caster, t)                               
                 elif spellplist[cOption][6] == "partyAll":
-                    for i in range(4):
-                        if partyLst[i] !=False:
+                    caster.cMP -= spellplist[cOption][1]
+                    for i in range(len(partyLst)):
+                        if partyLst[i].isDed() ==False:
                                 cast(spellplist[cOption], caster, partyLst[i])
                 if t!=False:     
                     goBack = True         
@@ -513,6 +518,7 @@ def battle(playerLst, enemLst):
     turn = 1
     runPower = 20
     totalEXP = 0
+    totalB = 0
     while(battleContinue):
         stdscr.clear() 
         spellsDict = loadspells()
@@ -591,12 +597,13 @@ def battle(playerLst, enemLst):
                                     totalEXP+=enemLst[i].expYield
                                 print("Victory! You recieved ",  totalEXP," EXP")    
                                 waitSpace()                            
-                                return playerLst, totalEXP, a.Name
-                        turn+=1
+                                return playerLst, totalEXP, totalB, a.Name
+                        turn = len(playerLst) + 1
             if(allDed(enemLst) == True):
-                    for i in range(len(enemLst)):
-                        totalEXP+=enemLst[i].expYield
-                    print("Victory! You recieved ",  totalEXP," EXP")
+                    for enem in enemLst:
+                        totalEXP+=enem.expYield
+                        totalB+=enem.bYield
+                    print("Victory! You recieved ",  totalEXP," EXP and ", totalB, " Blood and Bones!")
                     waitSpace()
                     battleContinue = False
                     break   
@@ -614,7 +621,7 @@ def battle(playerLst, enemLst):
              cOption -= 4
         elif (cOption <= 0):
             cOption +=  4
-    return playerLst, totalEXP, False
+    return playerLst, totalEXP, totalB, False
 
 def chooseDemand():
     cOption = 0

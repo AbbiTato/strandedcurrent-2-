@@ -178,12 +178,13 @@ class enemy(combattant):
 
 
 class ally(combattant):
-    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, Level, spellList = [], bCount = False, sCount = False):
+    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, Level, CHA, spellList = [], bCount = False, sCount = False):
         super().__init__(sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT)
         self.spellList = spellList
         self.oATK = self.ATK
         self.oDEF = self.DEF
         self.Level = Level
+        self.CHA = CHA
         if bCount!=False:
             self.bCount = bCount
             self.sCount = sCount
@@ -308,7 +309,7 @@ def targetMenu(entLst):
                 print(">"+targsLst[i].Name)
              else:
                 print(" "+targsLst[i].Name)       
-        choice = getMenuChoice(cOption)
+        choice = getMenuChoice(cOption, len(entLst))
         if choice == -1:
              return False
         elif choice == -2:
@@ -569,7 +570,7 @@ def battle(playerLst, enemLst):
             elif(cOption == 4):
                 a = targetMenu(enemLst)
                 if a!=False:
-                    if a.demand / ((playerLst[0].CHA+1) / 5) < 10:
+                    if a.demand / ((playerLst[0].CHA+1) / 5) > 10:
                         print("You don't think you know how to talk to this enemy yet...")
                     else:
                         x = convoMenu(a, playerLst[0])
@@ -577,8 +578,15 @@ def battle(playerLst, enemLst):
                         if x[1] == True:
                             if len(playerLst) > 3:
                                 print("Your party is full...")
+                                print(a.Name, " wandered off...")
+                                a.cHP = 0
+                                waitSpace()
                             else:
-                                print("")
+                                for i in range(len(enemLst)):
+                                    totalEXP+=enemLst[i].expYield
+                                print("Victory! You recieved ",  totalEXP," EXP")    
+                                waitSpace()                            
+                                return playerLst, totalEXP, a.Name
                         turn+=1
             if(allDed(enemLst) == True):
                     for i in range(len(enemLst)):
@@ -588,11 +596,9 @@ def battle(playerLst, enemLst):
                     battleContinue = False
                     break   
             if(turn == (len(playerLst)+1)):
-
                 for i in range(len(enemLst)):
                     if enemLst[i].isDed() == False:
-                        enemLst[i].selectAction(playerLst, enemLst, spellsDict)     
-                                                             
+                        enemLst[i].selectAction(playerLst, enemLst, spellsDict)                                     
                 if(allDed(playerLst) == True):
                     print("The party was defeated! Game over")                               
                     waitSpace()
@@ -604,7 +610,7 @@ def battle(playerLst, enemLst):
              cOption -= 4
         elif (cOption <= 0):
             cOption +=  4
-    return playerLst, totalEXP
+    return playerLst, totalEXP, False
 
 def chooseDemand():
     cOption = 0
@@ -649,10 +655,9 @@ def convoMenu(target, mc):
     if dChoice == False:
         return False
     isDone = False
-    cpositx = stdscr.getyx()[1]
-    cposity = stdscr.getyx()[0]
+    cposits = returnCposits()
     while(isDone == False):
-        clearToLine(cposity, cpositx)
+        clearToLine(cposits)
         print(makeDemandMeter(demandPosit))
         if demandPosit == target.demand:
             if target.convType == "Carnivore":
@@ -662,33 +667,46 @@ def convoMenu(target, mc):
                 payout = target.demand * mc.CHA
                 print("You get ", payout, " sticks and stones!")
                 mc.sCount += payout
+                waitSpace()
                 return mc, False
             else:
                 dCost = max(((target.demand * mc.Level) - mc.CHA), 1)
                 print("The monster acquiesces to your demands, in exchange for ", dCost," ", dString, ". Accept? (Z to accept, X to refuse")
-                event = keyboard.read_event()
-                if event.event_type == keyboard.KEY_DOWN and event.name == 'Z':
-                    if target.convType == "Carnivore" and (target.demand * mc.Level) > mc.bCount:
-                        print("But you didn't have enough...")
-                    else:
-                        mc.bCount - (target.demand * mc.Level)
-                        if dChoice == "Teach me a spell":
-                            mc.learnSpell(target.teachSpell)
-                            return mc, False
+                notDone = True
+                while(notDone):
+                    event = keyboard.read_event()
+                    if event.event_type == keyboard.KEY_DOWN and event.name == 'z':
+                        if target.convType == "Carnivore" and (target.demand * mc.Level) > mc.bCount:
+                            print("But you didn't have enough...")
+                            waitSpace()
+                            notDone = False
                         else:
-                            return mc, True
-                elif event.event_type == keyboard.KEY_DOWN and event.name == 'X':
-                    pass
+                            mc.bCount - (target.demand * mc.Level)
+                            
+                            if dChoice == "Teach me a spell":
+                                print(target.Name + "will teach you ", target.teachSpell, "!")
+                                waitSpace()
+                                mc.learnSpell(target.teachSpell)
+                                return mc, False
+                            else:
+                                print(target.Name + " will join you!!")
+                                waitSpace()
+                                return mc, True
+                    elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
+                        notDone = False
                 payout = target.demand * mc.CHA
                 print("The monster gives you something else instead... You get ", payout, " sticks and stones!")
                 mc.sCount += payout
+                waitSpace()
                 return mc, False
-        elif demandPosit < -lenience:
+        elif demandPosit < lenience:
             print("Negotiations Broke Down...")
             waitSpace()
-            return(mc, False)
+            return mc, False
 
-        demandPosit = askQuestion(mc, convoData, demandPosit)[0]
+        a = askQuestion(mc, convoData, demandPosit)
+        demandPosit = a[1]
+        mc = a[0]
 
 def askQuestion(mc, convoData, demandPosit):
     quesNum = randint(1, len(convoData))
@@ -696,14 +714,13 @@ def askQuestion(mc, convoData, demandPosit):
     convoData.pop(quesNum)
     if questData["question"][-1] == "!":
         questData["question"] = questData["question"][:-1]
-        mc.takeDamage(questData["question"][-1], False)
+        mc.takeDamage(int(questData["question"][-1]), False)
         if mc.cHP <=0:
             print("You held on for the rest of this conversation...")
             mc.cHP = 1
         waitSpace()
         questData["question"] = questData["question"][:-1]
         
-    print(questData["question"])
     cposits = returnCposits()
     running = True
     iptedLst = [qInterpret(questData["ansCorrect"], mc.Level, mc.CHA, "Correct"), qInterpret(questData["ansNeutral"], mc.Level, mc.CHA, "Neutral"), qInterpret(questData["ansIncorrect"], mc.Level, mc.CHA, "Incorrect")]
@@ -711,21 +728,22 @@ def askQuestion(mc, convoData, demandPosit):
     cOption = 0
     while(running):
         clearToLine(cposits)
+        print(questData["question"])
         for i in range(3):
             cString = " "
             if cOption == i:
                 cString = ">"
-            cString+=iptedLst[i]
+            cString+=iptedLst[i][0]
             print(cString)
         choice = getMenuChoice(cOption, 3)
         if choice == -2:
             if (iptedLst[1] == "£" and mc.sCount < max((iptedLst[2]*mc.Level - mc.CHA), 1)) or (iptedLst[1] == "$" and mc.sCount < max((iptedLst[2]*mc.Level - mc.CHA), 1)):
-                print("But you didn't have enough")
+                print("But you didn't have enough...")
             else:
-                if iptedLst[3] == "Correct":
+                if iptedLst[cOption][3] == "Correct":
                     demandPosit+=1
                     print("They seemed to like that")
-                elif iptedLst[3] == "Incorrect":
+                elif iptedLst[cOption][3] == "Incorrect":
                     demandPosit-=1
                     print("They didn't seem to like that...")
                 else:
@@ -746,25 +764,17 @@ def askQuestion(mc, convoData, demandPosit):
                 elif iptedLst[1] == "%":
                     mc.ATK = min(int(mc.oATK * 0.3), int(mc.ATK * 0.7))
                     print("You lost some attack power")
-                return mc, demandPosit
+                return [mc, demandPosit]
         else:
             cOption = choice
 
-
-                
-
-        
-            
-        
-
-    return mc, convoData, (demandPosit+1)
     
 
 def qInterpret(q, pLVL, pCHA, correctNess):
     if q[-1] == "!" or q[-1] =="%" or q[-1] =="$" or q[-1] =="£":
         efType = q[-1]
         q = q[:-1]
-        amt = q[-1]
+        amt = int(q[-1])
         q = q[:-1]
         if efType == "!":
             q+=("(Take " + str(max((amt*pLVL - pCHA), 1)) + "points of damage)")

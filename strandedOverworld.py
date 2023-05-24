@@ -97,6 +97,9 @@ class pMember:
                 if self.eType == "Hero":
                     self.bCount = 20
                     self.sCount = 20
+                else:
+                    self.bCount = False
+                    self.sCount = False
                 if row["startSpells"] == "None":
                     self.spellList = []
                 else:
@@ -237,7 +240,8 @@ class pMember:
             print(self.spellList[i])
     
     def makeCombattant(self):
-        return ally(self.sprID,self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT,  self.Level, self.spellList, self.bCount, self.sCount)
+        return ally(self.sprID,self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT,  self.Level, self.CHA, self.spellList, self.bCount, self.sCount)
+
 
 
 
@@ -661,6 +665,8 @@ def updatedParty(partyLst, updates):
         partyLst[i].gainEXP(updates[1])
     partyLst[0].bCount = updates[0][0].bCount
     partyLst[0].bCount = updates[0][0].sCount
+    if updates[2] != False:
+        partyLst.append(pMember(updates[2]))
     return partyLst
     
 
@@ -732,7 +738,7 @@ def printMap(mdata, mcPositx, mcPosity, mcDir):
 
 
 def overWorldLoop():
-    pLst = [pMember("Troubador", "Wooden Charm"), pMember("Florp")]
+    pLst = [pMember("Troubador", "Wooden Charm")]
     itemInventory = [item("HealingHerb", 3), item("SoulDrop", 5), item("Rock", 19), item("MegaHerb", 1)]
     equipInventory = [equipment("Spiked Branch"), equipment("Iron Band"), equipment("Leather Pelt")]
     mapName= "Test"

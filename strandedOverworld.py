@@ -752,7 +752,7 @@ def overWorldLoop():
     ##0: North, 1: East, 2: South, 3: West
     mcDir = 2
     leaveMap = False
-    stepcount = randint(1, 1)
+    stepcount = randint(20, 30)
     while(leaveMap == False):
         stdscr.clear()
         if stepcount <=0:

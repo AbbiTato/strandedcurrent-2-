@@ -524,7 +524,6 @@ def battle(playerLst, enemLst):
         spellsDict = loadspells()
         printbattletopscreen(playerLst, enemLst, spritesDict)
         print("Current Turn: "+ str(getRealCurrentPlayerName(playerLst, (turn-1))))
-        print(turn)
         if (cOption ==1):
             print(">FIGHT   SPELL")
             print(" RUN     TALK")
@@ -585,20 +584,21 @@ def battle(playerLst, enemLst):
                         print("You don't think you know how to talk to this enemy yet...")
                     else:
                         x = convoMenu(a, playerLst[0])
-                        playerLst[0] = x[0]
-                        if x[1] == True:
-                            if len(playerLst) > 3:
-                                print("Your party is full...")
-                                print(a.Name, " wandered off...")
-                                a.cHP = 0
-                                waitSpace()
-                            else:
-                                for i in range(len(enemLst)):
-                                    totalEXP+=enemLst[i].expYield
-                                print("Victory! You recieved ",  totalEXP," EXP")    
-                                waitSpace()                            
-                                return playerLst, totalEXP, totalB, a.Name
-                        turn = len(playerLst) + 1
+                        if x != False:
+                            if x[1] == True:
+                                playerLst[0] = x[0]
+                                if len(playerLst) > 3:
+                                    print("Your party is full...")
+                                    print(a.Name, " wandered off...")
+                                    a.cHP = 0
+                                    waitSpace()
+                                else:
+                                    for i in range(len(enemLst)):
+                                        totalEXP+=enemLst[i].expYield
+                                    print("Victory! You recieved ",  totalEXP," EXP")    
+                                    waitSpace()                            
+                                    return playerLst, totalEXP, totalB, a.Name
+                            turn = len(playerLst) + 1
             if(allDed(enemLst) == True):
                     for enem in enemLst:
                         totalEXP+=enem.expYield
@@ -654,10 +654,6 @@ def makeDemandMeter(demandPosit, lenience, demand):
     totalStr +="]"
     return totalStr
 
-
-
-
-
 def convoMenu(target, mc):
     stdscr.clear()
     convoData = target.loadConvo()
@@ -674,6 +670,8 @@ def convoMenu(target, mc):
         if demandPosit >= target.demand:
             if target.convType == "Carnivore":
                 dString = " Blood and Bones"
+            else:
+                dString = " Sticks and Stones"
             if dChoice == "Give me something cool":
                 print("The monster acquiesces to your demands!")
                 payout = target.demand * mc.CHA
@@ -694,6 +692,13 @@ def convoMenu(target, mc):
                             notDone = False
                         else:
                             mc.bCount - (target.demand * mc.Level)
+                        if target.convType == "Herbivore" and (target.demand * mc.Level) > mc.sCount:
+                            print("But you didn't have enough...")
+                            waitSpace()
+                            notDone = False
+                        else:
+                            mc.sCount - (target.demand * mc.Level)
+
                             
                             if dChoice == "Teach me a spell":
                                 print(target.Name + "will teach you ", target.teachSpell, "!")
@@ -747,8 +752,9 @@ def askQuestion(mc, convoData, demandPosit):
             print(cString)
         choice = getMenuChoice(cOption, 3)
         if choice == -2:
-            if (iptedLst[cOption][1] == "£" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)) or (iptedLst[cOption][1] == "$" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)):
+            if (iptedLst[cOption][1] == "*" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)) or (iptedLst[cOption][1] == "$" and mc.sCount < max((iptedLst[cOption][2]*mc.Level - mc.CHA), 1)):
                 print("But you didn't have enough...")
+                waitSpace()
             else:
                 if iptedLst[cOption][3] == "Correct":
                     demandPosit+=(1 + (int(mc.CHA / 5)))
@@ -765,7 +771,7 @@ def askQuestion(mc, convoData, demandPosit):
                         print("You held on for the rest of this conversation...")
                         mc.cHP = 1
                     waitSpace()
-                elif iptedLst[cOption][1] == "£":
+                elif iptedLst[cOption][1] == "*":
                     mc.sCount -= max((iptedLst[1][2]*mc.Level - mc.CHA), 1)
                     print("You used some sticks and stones")
                 elif iptedLst[cOption][1] == "$":
@@ -781,16 +787,16 @@ def askQuestion(mc, convoData, demandPosit):
     
 
 def qInterpret(q, pLVL, pCHA, correctNess):
-    if q[-1] == "!" or q[-1] =="%" or q[-1] =="$" or q[-1] =="£":
+    if q[-1] == "!" or q[-1] =="%" or q[-1] =="$" or q[-1] =="*":
         efType = q[-1]
         q = q[:-1]
         amt = int(q[-1])
         q = q[:-1]
         if efType == "!":
-            q+=("(Take " + str(max((amt*pLVL - pCHA), 1)) + "points of damage)")
+            q+=("(Take " + str(max((amt*pLVL - pCHA), 1)) + " points of damage)")
         elif efType == "%":
-            q+=("(Lose " + str(amt * 10) + "%% of your attack power)") 
-        elif efType == "£":
+            q+=("(Lose " + str(amt * 10) + "%"+ "of your attack power)") 
+        elif efType == "*":
             q+=("(Lose " + str(max((amt*pLVL - pCHA), 1)) + " of your sticks and stones)")
         elif efType == "$":
             q+=("(Lose " + str(max((amt*pLVL - pCHA), 1)) + " of your blood and bones)")

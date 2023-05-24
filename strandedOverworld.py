@@ -237,7 +237,7 @@ class pMember:
             print(self.spellList[i])
     
     def makeCombattant(self):
-        return ally(self.sprID, self.Level, self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT, self.spellList)
+        return ally(self.sprID, self.Level, self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT, self.spellList, self.Level)
 
 
 

@@ -164,11 +164,12 @@ class enemy(combattant):
 
 
 class ally(combattant):
-    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, spellList = []):
-        super().__init__(sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT)
+    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, Level, spellList = []):
+        super().__init__(sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, Level)
         self.spellList = spellList
         self.oATK = self.ATK
         self.oDEF = self.DEF
+        self.Level = Level
     def learnSpell(self, spell):
         if len(self.spellList) <8:
             self.spellList.append(spell)
@@ -677,15 +678,78 @@ def askQuestion(mc, convoData, demandPosit):
     print(questData["question"])
     cposits = returnCposits()
     running = True
-
+    iptedLst = [qInterpret(questData["ansCorrect"], mc.Level, mc.CHA, "Correct"), qInterpret(questData["ansNeutral"], mc.Level, mc.CHA, "Neutral"), qInterpret(questData["ansIncorrect"], mc.Level, mc.CHA, "Incorrect")]
+    shuffle(iptedLst)
+    cOption = 0
     while(running):
-        pass
+        clearToLine(cposits)
+        for i in range(3):
+            cString = " "
+            if cOption == i:
+                cString = ">"
+            cString+=iptedLst[i]
+            print(cString)
+        choice = getMenuChoice(cOption, 3)
+        if choice == -2:
+            if (iptedLst[1] == "£" and mc.sCount < max((iptedLst[2]*mc.Level - mc.CHA), 1)) or (iptedLst[1] == "$" and mc.sCount < max((iptedLst[2]*mc.Level - mc.CHA), 1)):
+                print("But you didn't have enough")
+            else:
+                if iptedLst[3] == "Correct":
+                    demandPosit+=1
+                    print("They seemed to like that")
+                elif iptedLst[3] == "Incorrect":
+                    demandPosit-=1
+                    print("They didn't seem to like that...")
+                else:
+                    print("They seemed to have no strong feelings about that")
+                waitSpace()
+                if iptedLst[1] == "!":
+                    mc.takeDamage(iptedLst[2], False)
+                    if mc.cHP <=0:
+                        print("You held on for the rest of this conversation...")
+                        mc.cHP = 1
+                    waitSpace()
+                elif iptedLst[1] == "£":
+                    mc.sCount -= max((iptedLst[2]*mc.Level - mc.CHA), 1)
+                    print("You used some sticks and stones")
+                elif iptedLst[1] == "$":
+                    mc.bCount -= max((iptedLst[2]*mc.Level - mc.CHA), 1)
+                    print("You used some blood and bones")
+                elif iptedLst[1] == "%":
+                    mc.ATK = min(int(mc.oATK * 0.3), int(mc.ATK * 0.7))
+                    print("You lost some attack power")
+        else:
+            cOption = choice
+
+
+                
+
+        
+            
         
 
     return mc, convoData, (demandPosit+1)
     
 
-                
+def qInterpret(q, pLVL, pCHA, correctNess):
+    if q[-1] == "!" or q[-1] =="%" or q[-1] =="$" or q[-1] =="£":
+        efType = q[-1]
+        q = q[:-1]
+        amt = q[-1]
+        q = q[:-1]
+        if efType == "!":
+            q+=("(Take " + str(max((amt*pLVL - pCHA), 1)) + "points of damage)")
+        elif efType == "%":
+            q+=("(Lose " + str(amt * 10) + "%% of your attack power)") 
+        elif efType == "£":
+            q+=("(Lose " + str(max((amt*pLVL - pCHA), 1)) + " of your sticks and stones)")
+        elif efType == "$":
+            q+=("(Lose " + str(max((amt*pLVL - pCHA), 1)) + " of your blood and bones)")
+        return q, efType, amt, correctNess
+    else:
+        return q, "", "", correctNess
+        
+
 
                 
 

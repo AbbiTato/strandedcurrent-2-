@@ -1,4 +1,4 @@
-Name,sprID,HP,MP,ATK,DEF,mATK,HIT,DODGE,CRIT,Mov1,Mov2,Mov3,Mov4,Mov5,Mov6,Mov7,Mov8,expYield," convType"," demand",teachSpell
-Mousile,3,18,0,15,4,1,18,2,4,Attack,Attack,Attack,Attack,Attack,Attack,Attack,Attack,20,Herbivore,8,Cure
-Florp,1,8,0,5,1,1,18,2,4,Attack,Attack,Attack,Attack,Attack,Attack,Attack,Attack,5,Carnivore,2,Blaze
-Eyesoar,2,12,4,7,2,2,18,2,4,Blaze,Blaze,DefDown,DefDown,DefDown,DefDown,Attack,Attack,8,Carnivore,5,DefDown
+Name,sprID,HP,MP,ATK,DEF,mATK,HIT,DODGE,CRIT,Mov1,Mov2,Mov3,Mov4,Mov5,Mov6,Mov7,Mov8,expYield,convType,demand,teachSpell
+Mousile,3,18,0,15,4,1,18,2,4,Attack,Attack,Attack,Attack,Attack,Attack,Attack,Attack,20,"Herbivore","8",Cure
+Florp,1,8,0,5,1,1,18,2,4,Attack,Attack,Attack,Attack,Attack,Attack,Attack,Attack,5,"Carnivore","2",Blaze
+Eyesoar,2,12,4,7,2,2,18,2,4,Blaze,Blaze,DefDown,DefDown,DefDown,DefDown,Attack,Attack,8,"Carnivore","5",DefDown

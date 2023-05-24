@@ -1,10 +1,10 @@
+
 import keyboard
 import curses
 import csv
 import os
-from strandedBattle import returnHPstring, waitSpace, loadsprites, ally, enemy, battle, clearToLine, returnCposits
 from random import randint
-
+from strandedBattle import ally, enemy, returnCposits, returnHPstring, waitSpace, loadsprites,  battle, clearToLine
 
 cmd = 'mode 160,40'
 os.system(cmd)
@@ -237,7 +237,7 @@ class pMember:
             print(self.spellList[i])
     
     def makeCombattant(self):
-        return ally(self.sprID, self.Level, self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT, self.spellList, self.Level)
+        return ally(self.sprID,self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT,  self.Level, self.spellList, self.bCount, self.sCount)
 
 
 
@@ -745,7 +745,7 @@ def overWorldLoop():
     ##0: North, 1: East, 2: South, 3: West
     mcDir = 2
     leaveMap = False
-    stepcount = randint(20, 30)
+    stepcount = randint(1, 1)
     while(leaveMap == False):
         stdscr.clear()
         if stepcount <=0:

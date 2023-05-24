@@ -1,11 +1,11 @@
+
 import keyboard
 import curses
 import random
-
 from random import randint, shuffle
 import csv 
 import os
-from strandedOverworld import getMenuChoice
+
 
 cmd = 'mode 160,50'
 os.system(cmd)
@@ -21,12 +21,29 @@ def print(*strings):
         stdscr.refresh()
     except curses.error:
         pass
+def getMenuChoice(cOption, optionsCount):
+    event = keyboard.read_event()
+    if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
+        cOption += 1
+        if cOption > optionsCount -1:
+            cOption = 0
+        return cOption
+    elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
+        cOption -= 1
+        if cOption <0:
+                cOption = optionsCount -1
+        return cOption
+    elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
+        return -1
+    elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
+        return -2
+    else:
+        return cOption
 
 
 class combattant:
-    def __init__(self, sprID, Level, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, bCount = False, sCount = False):
+    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT):
         self.sprID = sprID
-        self.Level = Level
         self.Name = Name
         self.HP = HP
         self.MP = MP 
@@ -41,9 +58,6 @@ class combattant:
         self.oATK = self.ATK
         self.oDEF = self.DEF
         self.omATK = mATK
-        if bCount!=False:
-            self.bCount = bCount
-            self.sCount = sCount
 
     def takeDamage(self, eATK, crit):
         dtotal = max((eATK - self.DEF), 1)
@@ -164,12 +178,15 @@ class enemy(combattant):
 
 
 class ally(combattant):
-    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, Level, spellList = []):
-        super().__init__(sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, Level)
+    def __init__(self, sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT, Level, spellList = [], bCount = False, sCount = False):
+        super().__init__(sprID, Name, HP, cHP, MP, cMP, ATK, DEF, mATK, HIT, DODGE, CRIT)
         self.spellList = spellList
         self.oATK = self.ATK
         self.oDEF = self.DEF
         self.Level = Level
+        if bCount!=False:
+            self.bCount = bCount
+            self.sCount = sCount
     def learnSpell(self, spell):
         if len(self.spellList) <8:
             self.spellList.append(spell)
@@ -556,6 +573,12 @@ def battle(playerLst, enemLst):
                         print("You don't think you know how to talk to this enemy yet...")
                     else:
                         x = convoMenu(a, playerLst[0])
+                        playerLst[0] = x[0]
+                        if x[1] == True:
+                            if len(playerLst) > 3:
+                                print("Your party is full...")
+                            else:
+                                print("")
                         turn+=1
             if(allDed(enemLst) == True):
                     for i in range(len(enemLst)):
@@ -620,7 +643,7 @@ def makeDemandMeter(demandPosit):
 
 def convoMenu(target, mc):
     convoData = target.loadConvo()
-    lenience = (10-target.demand)
+    lenience = -(10-target.demand)
     dChoice = chooseDemand()
     demandPosit = 1
     if dChoice == False:
@@ -660,6 +683,11 @@ def convoMenu(target, mc):
                 print("The monster gives you something else instead... You get ", payout, " sticks and stones!")
                 mc.sCount += payout
                 return mc, False
+        elif demandPosit < -lenience:
+            print("Negotiations Broke Down...")
+            waitSpace()
+            return(mc, False)
+
         demandPosit = askQuestion(mc, convoData, demandPosit)[0]
 
 def askQuestion(mc, convoData, demandPosit):
@@ -718,6 +746,7 @@ def askQuestion(mc, convoData, demandPosit):
                 elif iptedLst[1] == "%":
                     mc.ATK = min(int(mc.oATK * 0.3), int(mc.ATK * 0.7))
                     print("You lost some attack power")
+                return mc, demandPosit
         else:
             cOption = choice
 

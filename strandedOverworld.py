@@ -4,13 +4,26 @@ import curses
 import csv
 import os
 from random import randint
-from strandedBattle import ally, enemy, returnCposits, returnHPstring, waitSpace, loadsprites,  battle, clearToLine
+from strandedBattle import ally, enemy, returnCposits, returnHPstring, waitSpace, loadsprites,  battle, clearToLine, printStars
+from time import sleep
+from playsound import playsound
 
 cmd = 'mode 160,40'
 os.system(cmd)
 curses.noecho
 stdscr = curses.initscr()
 EXPvals = [0, 20, 35, 50, 70, 100, 140, 200, 280, 400, 600]
+global sound
+f = open("options.txt")
+if f.readline == "Sound: On":
+    sound = True
+else:
+    sound = False
+f.close()
+
+def soundMade(path):
+    if sound == True:
+        playsound(path)
 
 class equipment():
     def __init__(self, Name):
@@ -301,18 +314,22 @@ def checkEmptyItems(itemLst):
 def getMenuChoice(cOption, optionsCount):
     event = keyboard.read_event()
     if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
+        soundMade("sfx/menuMove.wav")
         cOption += 1
         if cOption > optionsCount -1:
             cOption = 0
         return cOption
     elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
+        soundMade("sfx/menuMove.wav")
         cOption -= 1
         if cOption <0:
                 cOption = optionsCount -1
         return cOption
     elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
+        soundMade("sfx/menuMove.wav")
         return -1
     elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
+        soundMade("sfx/menuMove.wav")
         return -2
     else:
         return cOption
@@ -384,14 +401,17 @@ def itemUseInventory(item, pLst):
                 while(miniGoBack == False):
                     event2 = keyboard.read_event()
                     if event2.event_type == keyboard.KEY_DOWN and event2.name == "z":
+                        soundMade("sfx/menuMove.wav")
                         item.count = 0
                         return item, pLst
                     elif event2.event_type == keyboard.KEY_DOWN and event2.name == "x":
+                        soundMade("sfx/menuMove.wav")
                         miniGoBack = True        
             elif oList[cOption] == "Back":
                 return item, pLst
         else:
             cOption = choice
+
 
 def partyChoice(item, pLst):
     cposits = returnCposits()
@@ -423,6 +443,9 @@ def partyChoice(item, pLst):
             return item, pLst
         else:
             cOption = choice
+
+
+
 
 def equipLoop(pLst, equipInventory):
     goBack = False
@@ -579,8 +602,31 @@ def statusLoop(pLst):
 
 def optionsLoop():
     stdscr.clear()
-    print("No Options Currently, more will be added once I've implemented difficulty and sound")
-    waitSpace()
+    f = open("options.txt")
+    oLine = f.readline()
+    f.close
+    global sound
+    if oLine == "Sound: On": 
+        cOption = 1
+    elif oLine == "Sound: Off":
+        cOption = 0
+    while True:
+        stdscr.clear()
+        print(oLine)
+        choice = getMenuChoice(cOption, 2)
+        if choice == -1:
+            return oLine
+        elif choice == 0: 
+            oLine = "Sound: Off"
+            sound = False
+        elif cOption == 1:
+            oLine = "Sound: On"
+            sound = True
+        cOption = choice
+    
+
+
+
 
 
 def menuLoop(UIdata, itemInventory, equipInventory, pLst):
@@ -590,16 +636,20 @@ def menuLoop(UIdata, itemInventory, equipInventory, pLst):
         stdscr.clear()
         event = keyboard.read_event()
         if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
+            soundMade("sfx/menuMove.wav")
             cOption += 8
             if cOption>27:
                 cOption = 3
         elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
+            soundMade("sfx/menuMove.wav")
             cOption -= 8
             if cOption <3:
                 cOption = 27
         elif event.event_type == keyboard.KEY_DOWN and event.name == 'x'  :
+            soundMade("sfx/menuMove.wav")
             return itemInventory, pLst
         elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
+            soundMade("sfx/menuMove.wav")
             if cOption == 3:
                 a = itemLoop(itemInventory, pLst)
                 itemInventory = a[0]
@@ -609,7 +659,10 @@ def menuLoop(UIdata, itemInventory, equipInventory, pLst):
             elif cOption == 19:
                 statusLoop(pLst)
             elif cOption == 27:
-                optionsLoop()
+                x = optionsLoop()
+                f = open("options.txt", "w")
+                f.write(x)
+                f.close()
         
         for i in range(len(UIdata)):
             string = UIdata[i]
@@ -655,8 +708,26 @@ def startEncounter(memLst, partyLst):
     pLst = []
     for i in range(len(partyLst)):
         pLst.append(partyLst[i].makeCombattant())
-    updates = battle(pLst, enemLst)
+    transitionStart()
+    global sound
+    updates = battle(pLst, enemLst, sound)
+    stdscr.move(0,0)
+    transitionStart(True)
+    stdscr.move(0,0)
     return updatedParty(partyLst, updates)
+
+def transitionStart(direction = False):
+    if direction == True:
+        for i in range(15):
+            print("**********************************************************************")
+            sleep(0.02)
+    else:
+        cPosity = 15
+        while(cPosity > 0):
+            print("**********************************************************************")
+            sleep(0.02)
+            cPosity -=1
+            stdscr.move(cPosity, 0)
 
 
 def updatedParty(partyLst, updates):
@@ -716,14 +787,15 @@ def getMcDir(mcDir):
     elif mcDir == 3:
         return "<"
 
-def printMap(mdata, mcPositx, mcPosity, mcDir):
+def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
+    stdscr.move(0,0)
+    stdscr.clrtobot()
     cRangex = 20
     cRangey = 12
     lowrangx = max(mcPositx-cRangex, -1)
     highrangx = max(mcPositx+cRangex, len(mdata[0]))
     lowrangy = max(mcPosity-cRangey, -1)
     highrangy = min(mcPosity+cRangey, len(mdata))
-    ##print(lowrangx," ",highrangx," ",lowrangy," ",highrangy)
     for y in range(len(mdata)):
         linestr = "          "
         if (lowrangy<y<highrangy):
@@ -734,6 +806,7 @@ def printMap(mdata, mcPositx, mcPosity, mcDir):
                     else:
                         linestr+=mdata[y][x]
             print(linestr)
+            printStars(doStars)              
     stdscr.refresh()
 
 
@@ -761,6 +834,8 @@ def overWorldLoop():
         if stepcount <=0:
             pLst = chooseEncounter(encData, pLst)
             stepcount = randint(20, 30)
+            stdscr.move(0,0)
+            printMap(mLayout, mcPositx, mcPosity, mcDir, True)
         printMap(mLayout, mcPositx, mcPosity, mcDir)
         event = keyboard.read_event()
         if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
@@ -803,6 +878,7 @@ def overWorldLoop():
 
 def eventHandler(data, Iinventory, Einventory):
     if data[0] == "chestItem":
+        soundMade("sfx/pickupCoin.wav")
         quant = int(data[1][-1])
         dataName = data[1][:-1]
         Iinventory.append(item(dataName, quant))

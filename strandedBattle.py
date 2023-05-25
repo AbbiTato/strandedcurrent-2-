@@ -1,15 +1,22 @@
-
 import keyboard
 import curses
 import random
 from random import randint, shuffle
 import csv 
 import os
+from time import sleep
+from playsound import playsound
 
 
 cmd = 'mode 160,50'
 os.system(cmd)
 stdscr = curses.initscr()
+global sound
+sound = True
+
+def soundMade(path):
+    if sound == True:
+        playsound(path)
 
 def print(*strings):
     strString = ""
@@ -24,18 +31,22 @@ def print(*strings):
 def getMenuChoice(cOption, optionsCount):
     event = keyboard.read_event()
     if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
+        playsound("sfx/menuMove.wav")
         cOption += 1
         if cOption > optionsCount -1:
             cOption = 0
         return cOption
     elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
+        playsound("sfx/menuMove.wav")
         cOption -= 1
         if cOption <0:
                 cOption = optionsCount -1
         return cOption
     elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
+        playsound("sfx/menuMove.wav")
         return -1
     elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
+        playsound("sfx/menuMove.wav")
         return -2
     else:
         return cOption
@@ -62,7 +73,10 @@ class combattant:
     def takeDamage(self, eATK, crit):
         dtotal = max((eATK - self.DEF), 1)
         if crit == True:
+            playsound("sfx/crit.wav")
             dtotal = max((eATK * 2), 2)
+        else:
+            playsound("sfx/attack.wav")
         print(self.Name+ " took "+  str(dtotal)+ " points of damage!")
         waitSpace()
         self.cHP -= (dtotal)
@@ -227,7 +241,8 @@ class ally(combattant):
 
 
 def returnCposits():
-    return stdscr.getyx()[0], stdscr.getyx()[1]     
+    print("")
+    return stdscr.getyx()     
 
             
 
@@ -247,12 +262,16 @@ def makeOptionsMenu(optionsLst):
             print(cString)
         event = keyboard.read_event()
         if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
+            playsound("sfx/menuMove.wav")
             cOption += 1
         elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
+            playsound("sfx/menuMove.wav")
             cOption -= 1
         elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
+             playsound("sfx/menuMove.wav")
              return False
         elif event.event_type == keyboard.KEY_DOWN and event.name == 'z':
+            playsound("sfx/menuMove.wav")
             return optionsLst[cOption]
         if(cOption <0):
             cOption = len(optionsLst)
@@ -297,7 +316,6 @@ def namesonline(entLst):
             online += entLst[i].Name + (" " * (spaces - len(entLst[i].Name)))
         else:
             online+=" " * spaces
-
     return online
 
 
@@ -325,7 +343,7 @@ def targetMenu(entLst):
             cOption = choice          
         
 
-def printOnLine(entLst, array):
+def printOnLine(entLst, array, doPrint = False):
     LstLine = ""
     maxsent = 0
     gap = 30
@@ -351,17 +369,31 @@ def printOnLine(entLst, array):
                 
             
         print(LstLine)
+        printStars(doPrint)
         LstLine = ""        
 
+def printStars(doPrint):
+    if doPrint == True:
+        cPosity = returnCposits()[0]
+        print("**********************************************************************")
+        sleep(0.02)
+        stdscr.move((cPosity-1), 0)
 
-def printbattletopscreen(playerLst, enemLst, a):
+
+
+def printbattletopscreen(playerLst, enemLst, a, doPrint = False):
         print(namesonline(enemLst))
-        printOnLine(enemLst, a)
+        printStars(doPrint)
+        printOnLine(enemLst, a, doPrint)
         print(HPstringonline(enemLst, False))
+        printStars(doPrint)
         print("")
+        printStars(doPrint)
         print(namesonline(playerLst))
-        printOnLine(playerLst, a)
+        printStars(doPrint)
+        printOnLine(playerLst, a, doPrint)
         print(HPstringonline(playerLst, True))
+        printStars(doPrint)
 
 def waitSpace():
     x = True
@@ -407,6 +439,7 @@ def buffHandler(stat, ostat, spell, target, debuff = False):
     
         
 def cast(spell, caster, target):
+    playsound("sfx/spell.wav")
     print(caster.Name+ " cast "+ spell[0]+ "!")
     damage = int((spell[2] +caster.mATK)* spell[3])
     if(spell[4] == "Heal"):
@@ -511,7 +544,9 @@ def getRealCurrentPlayerName(playerLst, turn):
 
 
      
-def battle(playerLst, enemLst):
+def battle(playerLst, enemLst, soundState):
+    global sound
+    sound=soundState
     battleContinue = True
     spritesDict = loadsprites()
     spellsDict = loadspells()
@@ -520,6 +555,7 @@ def battle(playerLst, enemLst):
     runPower = 20
     totalEXP = 0
     totalB = 0
+    printbattletopscreen(playerLst, enemLst, spritesDict, True)
     while(battleContinue):
         stdscr.clear() 
         spellsDict = loadspells()
@@ -539,12 +575,16 @@ def battle(playerLst, enemLst):
             print(" RUN    >TALK")
         event = keyboard.read_event()
         if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
+            playsound("sfx/menuMove.wav")
             cOption += 2
         elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
+            playsound("sfx/menuMove.wav")
             cOption -= 2
         elif event.event_type == keyboard.KEY_DOWN and event.name == "right":
+            playsound("sfx/menuMove.wav")
             cOption +=1
         elif event.event_type == keyboard.KEY_DOWN and event.name == "left":
+            playsound("sfx/menuMove.wav")
             cOption -=1
         elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
             if(cOption == 1):
@@ -711,6 +751,7 @@ def convoMenu(target, mc):
                                 waitSpace()
                                 return mc, True
                     elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
+                        playsound("sfx/menuMove.wav")
                         notDone = False
                 payout = target.demand * mc.CHA
                 print("The monster gives you something else instead... You get ", payout, " sticks and stones!")

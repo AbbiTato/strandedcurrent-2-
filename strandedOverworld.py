@@ -769,6 +769,7 @@ def importMapData(mapName = "Test"):
     return totalLst
 
 def getMapEventPosit(data, x, y):
+    print(x," ", y)
     for i in range(len(data)):
         if int(data[i]["eventx"]) == x and int(data[i]["eventy"]) == y:
             return [data[i]["eventName"], data[i]["eventContents"], data[i]["iD"]]
@@ -828,12 +829,12 @@ def overWorldLoop():
     ##0: North, 1: East, 2: South, 3: West
     mcDir = 2
     leaveMap = False
-    stepcount = randint(20, 30)
+    stepcount = randint(2000, 3000)
     while(leaveMap == False):
         stdscr.clear()
         if stepcount <=0:
             pLst = chooseEncounter(encData, pLst)
-            stepcount = randint(20, 30)
+            stepcount = randint(1000, 3000)
             stdscr.move(0,0)
             printMap(mLayout, mcPositx, mcPosity, mcDir, True)
         printMap(mLayout, mcPositx, mcPosity, mcDir)
@@ -869,16 +870,48 @@ def overWorldLoop():
                 invData = eventHandler(eventPosit, itemInventory, equipInventory)
                 itemInventory = invData[0]
                 equipInventory = invData[1]
-                if (eventPosit[0] == "chestItem" or eventPosit[0] =="chestEquip"):
-                    mLayout[coord[1]][coord[0]] = "."
-                for i in range(len(mData)-1):
-                    if mData[i]["iD"] == eventPosit[2]:
-                        mData.pop(int(eventPosit[2]))
+                if invData[2] == "None":
+                    if (eventPosit[0] == "chestItem" or eventPosit[0] =="chestEquip"):
+                        mLayout[coord[1]][coord[0]] = "."
+                    for i in range(len(mData)-1):
+                        if mData[i]["iD"] == eventPosit[2]:
+                            mData.pop(int(eventPosit[2]))
+                else:
+                    mapSave(mapName, mLayout, mData)
+                    mapName = invData[2][0]
+                    mcPositx = int(invData[2][1])
+                    mcPosity = int(invData[2][2])
+                    mLayout = importMapLayout(mapName)
+                    mData = importMapData(mapName)
+                    encData = importMapEncounters(mapName)
+                    printMap(mLayout, mcPositx, mcPosity, mcDir, True)
+
+def mapSave(mapName, mLayout, mData):
+    f = open("maps/" + mapName+"/maplayout.txt", "w")
+    for line in mLayout:
+        line.append("\n")
+        f.writelines(line)
+    f.close()
+    g = open("maps/" + mapName+"/mapdata.csv", "w")
+    gWriter = csv.writer(g, lineterminator="")
+    gWriter.writerow(mData[0].keys())
+    gWriter.writerow("\n")
+    for line in mData:
+        gWriter.writerow(line.values())
+        gWriter.writerow("\n")
+    g.close()
+        
+
+
+
+
 
 
 def eventHandler(data, Iinventory, Einventory):
+    areaChange = "None"
     if data[0] == "chestItem":
         soundMade("sfx/pickupCoin.wav")
+        waitSpace()
         quant = int(data[1][-1])
         dataName = data[1][:-1]
         Iinventory.append(item(dataName, quant))
@@ -893,7 +926,9 @@ def eventHandler(data, Iinventory, Einventory):
     elif data[0] == "npc":
         print(data[1])
         waitSpace()
-    return Iinventory, Einventory
+    elif data[0] == "areaTrans":
+        areaChange = data[1].split(",")
+    return Iinventory, Einventory, areaChange
 
 def combineStacks(itemLst):
     sentLst = []

@@ -4,15 +4,21 @@ import curses
 import csv
 import os
 from random import randint
-from strandedBattle import ally, enemy, returnCposits, returnHPstring, waitSpace, loadsprites,  battle, clearToLine, printStars
+#Imports Needed methods from strandedBattle. 
+#Could do with a central location for streamlining as program expands
+from strandedBattle import ally, enemy, battle,returnCposits, returnHPstring, waitSpace, loadsprites, clearToLine, printStars
 from time import sleep
 from playsound import playsound
 
+#Set screen size and initialise the curses window
 cmd = 'mode 160,40'
 os.system(cmd)
 curses.noecho
 stdscr = curses.initscr()
+#Hard Coded EXP values. Better implementation useful but not currently needed
 EXPvals = [0, 20, 35, 50, 70, 100, 140, 200, 280, 400, 600]
+
+#makes sound a global variable, imports the user's local "options" file, then sets sound based on that
 global sound
 f = open("options.txt")
 if f.readline == "Sound: On":
@@ -21,12 +27,15 @@ else:
     sound = False
 f.close()
 
+#this method only plays sound if the sound variable is True
 def soundMade(path):
     if sound == True:
         playsound(path)
 
+##the equipment class lets me group methods and data to do with the game's equipment
 class equipment():
     def __init__(self, Name):
+        ##import all the item data to the object with only the Name field
         f = open("equipmentData.csv")
         g = csv.DictReader(f)
         for row in g:
@@ -43,6 +52,8 @@ class equipment():
                 self.desc = row["desc"]
         f.close()
 
+    #showStats is used in a few places to display the equipment's stats. The eWpn passed in is the currently equipped weapon
+    #to allow the player to compare the two pieces of gear 
     def showStats(self, eWpn):
         statString = ""
         if self.aBonus != 0:
@@ -57,15 +68,16 @@ class equipment():
             statString += "HIT: " + str(self.HIT * 5)+"%" + "(" + returnPlus((self.HIT*5)-(eWpn.HIT*5)) + "%) "
         else:
             statString += "HIT + " + str(self.HIT * 5)+"%" + "(" + returnPlus((self.HIT*5)-(eWpn.HIT*5)) + "%) "
-            
         if self.eBonus !=0:
             statString += "DODGE + " + str(self.eBonus * 5) + "%" + "(" + returnPlus((self.eBonus *5)-(eWpn.eBonus * 5)) + "%) " 
         if self.cBonus !=0:
             statString += "CRIT + "  + str(self.cBonus * 5) + "%" + "(" + returnPlus((self.cBonus *5)-(eWpn.cBonus * 5)) + "%) "
         return statString
 
+#groups methods and data to do with inventory items. for streamlining purposes, could have a shared parent of item and equipment
 class item():
     def __init__(self, Name, count):
+        #imports all the data based on the Name field
         f = open("itemData.csv")
         g = csv.DictReader(f)
         self.count = count
@@ -80,21 +92,26 @@ class item():
                 self.price = int(row["price"])
                 self.description = row["description"]
         f.close()
+    #Item is exceedingly simple, this just changes how many you have.
+    #Could possibly be changed to a list/dictionary
     def changeQuant(self, num):
         self.count += num
         
 
-
+#pmember is one of the more important to be a class classes
 class pMember:
     def __init__(self, Name, startAcc = "None" ):
+        #imports certain characteristics based on the charStats file
         f = open("charStats.csv")
         g = csv.DictReader(f)
         for row in g:
             if (row["Name"] == Name):
                 self.sprID = int(row["sprID"])
                 self.Name = Name
+                #All characters atm start at level 1 with 0 exp. May need an override
                 self.Level = 1
                 self.EXP = 0
+                #Every star has both bases and growths. Bases=LVL1 stats, growths=%chance to gain stat on LVL+
                 self.HP = int(row["HPBase"])
                 self.cHP = self.HP
                 self.MP = int(row["MPBase"])
@@ -103,20 +120,25 @@ class pMember:
                 self.INT = int(row["INTBase"])
                 self.RES = int(row["RESBase"])                
                 self.CHA = int(row["CHABase"])
+                #the equipment slots are filled with equipment objects
                 self.eWpn = equipment(row["startWPN"])
                 self.eAmr = equipment(row["startAMR"])
                 self.eAcc = equipment(startAcc)
+                #changes what can be equipped
                 self.eType = row["eType"]
+                #the hero carries the party's cash. If not the hero, bCount is set to -1 to simplify debugging
                 if self.eType == "Hero":
                     self.bCount = 0
                     self.sCount = 0
                 else:
                     self.bCount = -1
                     self.sCount = -1
+                #startspells gets split or not depending on if the character has any
                 if row["startSpells"] == "None":
                     self.spellList = []
                 else:
                     self.spellList = row["startSpells"].split(",")
+                #growths are assembled into a list of staircasey summed numbers going up to 20. EG: [2, 4, 4, 4, 2, 4] becomes [2, 6, 10, 14, 16, 20]
                 HPGrow = int(row["HPGrow"])
                 MPGrow = int(row["MPGrow"]) + HPGrow
                 STRGrow = int(row["STRGrow"]) + MPGrow
@@ -124,9 +146,11 @@ class pMember:
                 RESGrow = int(row["RESGrow"]) + INTGrow
                 CHAGrow = int(row["CHAGrow"]) + RESGrow
                 self.growths = [HPGrow, MPGrow, STRGrow, INTGrow, RESGrow, CHAGrow]
+                #extra data related to levelling up is imported
                 self.growCount = int(row["growCount"])
                 self.EXPRate = int(row["EXPRate"])
                 self.LVLCap = int(row["LVLCap"])
+                #composite stats. HIT, DODGE and CRIT must be at least 1, and while they can be above 20, this doesn't help the player
                 self.ATK = self.STR + self.eWpn.aBonus + self.eAmr.aBonus + self.eAcc.aBonus
                 self.DEF = self.eWpn.dBonus + self.eAmr.dBonus + self.eAcc.dBonus
                 self.mATK = self.INT + self.eWpn.mBonus + self.eAmr.mBonus + self.eAcc.mBonus
@@ -134,11 +158,13 @@ class pMember:
                 self.DODGE = 1+self.eWpn.eBonus + self.eAmr.eBonus + self.eAcc.eBonus
                 self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus
             
-
+    #applies a level up
     def levelUp(self):
         self.Level +=1
+        #the bonuses array is just to make the stat printing at the end less messy
         bonuses = [0, 0, 0, 0, 0, 0]
         print(self.Name, " levelled up!")
+        #the for loop happens as many times as growcount, and decides based on the %s from earlier 6 stats to increase
         for i in range(self.growCount):
             a = randint(1, 20)
             if a <= self.growths[0]:
@@ -163,15 +189,19 @@ class pMember:
                 bonuses[5] +=1
             else:
                 print("Error")
+        #print a well laid out set of level up data
         print("HP+", bonuses[0], " (", self.HP,")")
         print("MP+", bonuses[1], " (", self.MP,")")
         print("STR+", bonuses[2], " (", self.STR,")")
         print("INT+", bonuses[3], " (", self.INT,")")
         print("RES+", bonuses[4], " (", self.RES,")")
         print("CHA+", bonuses[5], " (", self.CHA,")")
+        #stat change must be run here to fix the composite stats
         self.statChange()
         waitSpace()
-            
+
+    #the only reason gainEXP needs to be a function is so that if the player gains more EXP than would be required to level up
+    #the new EXP gets added to their total, and due to the function being recursive, can level up the player a second time        
     def gainEXP(self, gEXP):
         if self.Level != self.LVLCap and gEXP!= 0:
             self.EXP += gEXP
@@ -182,7 +212,7 @@ class pMember:
                 self.gainEXP(oEXP - EXPvals[self.Level])
 
 
-    
+    #fixes the composite stats if the player's equipment changes
     def statChange(self):
         self.ATK = self.STR + self.eWpn.aBonus + self.eAmr.aBonus + self.eAcc.aBonus
         self.DEF = self.RES + self.eWpn.dBonus + self.eAmr.dBonus + self.eAcc.dBonus
@@ -191,18 +221,20 @@ class pMember:
         self.DODGE = 1+self.eWpn.eBonus + self.eAmr.eBonus + self.eAcc.eBonus
         self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus
     
+    #a clone of the sprite printing method from strandedBattle, but due to being methodbound doesn't need a passed in sprID
     def returnspr(self, lst):
         isnum = False
-        sprArray = []
+        sprList = []
         for i in range(len(lst)):
             if(lst[i] == str(self.sprID+1)+"\n"):
                 break   
             if(isnum == True):
-                sprArray.append(lst[i])
+                sprList.append(lst[i])
             if(lst[i] == str(self.sprID)+"\n"):
                 isnum = True  
-        return sprArray
+        return sprList
     
+    #could possibly be cut, heals the player
     def heal(self, power, hpmp):
         if hpmp == "hp":
             if (self.HP - self.cHP < power):
@@ -219,12 +251,14 @@ class pMember:
                 print(self.Name, "'s MP is recovered by ", str(power), " points!")
                 self.cMP+=power
     
+    #returns the % chances of dodging, critting and hitting. Used on several display screens
     def returnPcentchances(self):
         eChance = 5 * self.DODGE
         cChance = 5 * self.CRIT
         hChance = 5 * self.HIT
         return hChance, eChance, cChance
 
+    #was surprised how simple this function turned out to be. Sets a new piece of equipment
     def equip(self, pEquip):
         if pEquip.eType == "Weapon":
             self.eWpn = pEquip
@@ -234,6 +268,7 @@ class pMember:
             self.eAcc = pEquip
         self.statChange()
     
+    #a longass function which to summarise prints all the player's data to the screen
     def printStats(self):
         print(self.Name, "  LVL:", self.Level)
         print("EXP:", self.EXP, " To Next: ", (EXPvals[self.Level] - self.EXP))
@@ -255,12 +290,13 @@ class pMember:
         for spell in self.spellList:
             print(spell)
     
+    #when the battle starts, an Ally object is made using the pMember's data
     def makeCombattant(self):
         return ally(self.sprID,self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT,  self.Level, self.CHA, self.spellList, self.bCount, self.sCount)
 
 
 
-
+#just returns the number as a string, but if positive it has a + in front of it
 def returnPlus(num):
     if num >0:
         string = "+"
@@ -269,27 +305,7 @@ def returnPlus(num):
     string+=str(abs(num))
     return string
 
-
-
-def print(*strings):
-    strString = ""
-    for string in strings:
-        strString += str(string)
-    try:
-        stdscr.addstr(strString)
-        stdscr.addstr("\n")
-        stdscr.refresh()
-    except curses.error:
-        pass
-
-def printCol(string, color):
-    try:
-        stdscr.addstr(string, color)
-        stdscr.addstr("\n")
-        stdscr.refresh()
-    except curses.error:
-        pass
-
+#gets pretty UI data from a file
 def importUIData():
     totalLst = []
     f = open("UIdata.txt")
@@ -298,6 +314,7 @@ def importUIData():
     f.close()
     return totalLst
 
+#checks over all the inventory items, and if their Quant is 0 they are removed
 def checkEmptyItems(itemLst):
     removYes = False
     for i in range(len(itemLst)):
@@ -311,8 +328,10 @@ def checkEmptyItems(itemLst):
             pass
     return itemLst, removYes
 
+#a very handy method that checks for the player's input on a 1d menu each time it's run. Saves a lot of repeat code
 def getMenuChoice(cOption, optionsCount):
     event = keyboard.read_event()
+    #the two directions simply return cOption +-1, and loop around if above/below limits
     if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
         soundMade("sfx/menuMove.wav")
         cOption += 1
@@ -325,28 +344,34 @@ def getMenuChoice(cOption, optionsCount):
         if cOption <0:
                 cOption = optionsCount -1
         return cOption
+    #-1 and -2 are used for back and forward. Used to use True and False but since 1 and 0 are Truthy and Falsey it caused errors
     elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
         soundMade("sfx/menuMove.wav")
         return -1
     elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
         soundMade("sfx/menuMove.wav")
         return -2
+    #since the function is run continually as part of a loop, it needs to sometimes just return nothing
     else:
         return cOption
     
 
 
 
-
+#displays the player's basic items in a list
 def itemLoop(itemInventory, pLst):
     goBack = False
     cOption = 0
+    #goBack is semi-obselete since I leave the loop with return statements, but it makes the code cleaner
     while (goBack == False):
+        #since items are being used further down the loop, it is worthwhile to check they still >0
         a = checkEmptyItems(itemInventory)
         itemInventory = a[0]
-        if a[1] == True: cOption = 0
-
+        if a[1] == True: 
+            cOption = 0
+        #for main menus, we clear the entire screen
         stdscr.clear()
+        #prints all the items, with the current item being preceeded by a ">" if i matches cOption
         for i in range(len(itemInventory)):
             cString = ""
             if i == cOption:
@@ -357,7 +382,9 @@ def itemLoop(itemInventory, pLst):
             cString+=" x "
             cString+=str(itemInventory[i].count)
             print(cString)
+        
         choice = getMenuChoice(cOption, len(itemInventory))
+        #opens the itemUseInventory subMenu of the item the player selected if they press Z, otherwise returns to the main menu
         if choice == -2:
             a = itemUseInventory(itemInventory[cOption], pLst)
             itemInventory[cOption] = a[0]
@@ -769,10 +796,9 @@ def importMapData(mapName = "Test"):
     return totalLst
 
 def getMapEventPosit(data, x, y):
-    print(x," ", y)
     for i in range(len(data)):
         if int(data[i]["eventx"]) == x and int(data[i]["eventy"]) == y:
-            return [data[i]["eventName"], data[i]["eventContents"], data[i]["iD"]]
+            return [data[i]["eventName"], data[i]["eventContents"], i]
     return[-1, -1, -1]
 
 
@@ -787,6 +813,17 @@ def getMcDir(mcDir):
         return "V"
     elif mcDir == 3:
         return "<"
+
+def print(*strings):
+    strString = ""
+    for string in strings:
+        strString += str(string)
+    try:
+        stdscr.addstr(strString)
+        stdscr.addstr("\n")
+        stdscr.refresh()
+    except curses.error:
+        pass
 
 def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
     stdscr.move(0,0)
@@ -873,9 +910,7 @@ def overWorldLoop():
                 if invData[2] == "None":
                     if (eventPosit[0] == "chestItem" or eventPosit[0] =="chestEquip"):
                         mLayout[coord[1]][coord[0]] = "."
-                    for i in range(len(mData)-1):
-                        if mData[i]["iD"] == eventPosit[2]:
-                            mData.pop(int(eventPosit[2]))
+                        mData.pop(eventPosit[2])
                 else:
                     mapSave(mapName, mLayout, mData)
                     mapName = invData[2][0]

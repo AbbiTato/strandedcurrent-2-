@@ -9,6 +9,9 @@ from random import randint
 from strandedBattle import ally, enemy, battle,returnCposits, returnHPstring, waitSpace, loadsprites, clearToLine, printStars, getMenuChoice
 from time import sleep
 from playsound import playsound
+#sets the currently being accessed save file
+global FileName
+FileName = ""
 
 #Set screen size and initialise the curses window
 cmd = 'mode 160,40'
@@ -337,37 +340,43 @@ def checkEmptyItems(itemLst):
 def itemLoop(itemInventory, pLst):
     goBack = False
     cOption = 0
-    #goBack is semi-obselete since I leave the loop with return statements, but it makes the code cleaner
-    while (goBack == False):
-        #since items are being used further down the loop, it is worthwhile to check they still >0
-        a = checkEmptyItems(itemInventory)
-        itemInventory = a[0]
-        if a[1] == True: 
-            cOption = 0
-        #for main menus, we clear the entire screen
-        stdscr.clear()
-        #prints all the items, with the current item being preceeded by a ">" if i matches cOption
-        for i in range(len(itemInventory)):
-            cString = ""
-            if i == cOption:
-                cString+=">"
+    #checks the player actually has items to look at
+    if (len(itemInventory) == 0):
+        print("You have no items!")
+        waitSpace()
+        return itemInventory, pLst
+    else:
+        #goBack is semi-obselete since I leave the loop with return statements, but it makes the code cleaner
+        while (goBack == False):
+            #since items are being used further down the loop, it is worthwhile to check they still >0
+            a = checkEmptyItems(itemInventory)
+            itemInventory = a[0]
+            if a[1] == True: 
+                cOption = 0
+            #for main menus, we clear the entire screen
+            stdscr.clear()
+            #prints all the items, with the current item being preceeded by a ">" if i matches cOption
+            for i in range(len(itemInventory)):
+                cString = ""
+                if i == cOption:
+                    cString+=">"
+                else:
+                    cString+=" "
+                cString+=itemInventory[i].Name
+                cString+=" x "
+                cString+=str(itemInventory[i].count)
+                print(cString)
+            
+            choice = getMenuChoice(cOption, len(itemInventory))
+            #opens the itemUseInventory subMenu of the item the player selected if they press Z, otherwise returns to the main menu
+            if choice == -2:
+                a = itemUseInventory(itemInventory[cOption], pLst)
+                itemInventory[cOption] = a[0]
+                pLst = a[1]
+            elif choice == -1:
+                return itemInventory, pLst
             else:
-                cString+=" "
-            cString+=itemInventory[i].Name
-            cString+=" x "
-            cString+=str(itemInventory[i].count)
-            print(cString)
-        
-        choice = getMenuChoice(cOption, len(itemInventory))
-        #opens the itemUseInventory subMenu of the item the player selected if they press Z, otherwise returns to the main menu
-        if choice == -2:
-            a = itemUseInventory(itemInventory[cOption], pLst)
-            itemInventory[cOption] = a[0]
-            pLst = a[1]
-        elif choice == -1:
-            return itemInventory, pLst
-        else:
-            cOption = choice
+                cOption = choice
     
 #the submenu for using an item
 def itemUseInventory(item, pLst):
@@ -696,7 +705,9 @@ def menuLoop(UIdata, itemInventory, equipInventory, pLst):
 
 #imports the set of encounters from the relevant map file
 def importMapEncounters(mapName = "Test"):
-    string = "maps/"+ mapName + "/mapencounter.csv"
+    global FileName
+
+    string = FileName+"/maps/"+ mapName + "/mapencounter.csv"
     f = open(string)
     g = csv.DictReader(f)
     dictLst = []
@@ -785,7 +796,8 @@ def updatedParty(partyLst, updates):
 #it gets made into an array of arrays
 def importMapLayout(mapName = "Test"):
     totalLst = []
-    string =  "maps\\" + mapName + "\maplayout.txt"
+    global FileName
+    string =  FileName+"/maps/" + mapName + "/maplayout.txt"
     f = open(string)
     for line in f:
         localLst = []
@@ -797,7 +809,8 @@ def importMapLayout(mapName = "Test"):
 
 #the mapData is a list of all the events, such as chests, NPCs and area transitions
 def importMapData(mapName = "Test"):
-    string = "maps\\" + mapName + "\mapdata.csv"
+    global FileName
+    string = FileName+"/maps/" + mapName + "/mapdata.csv"
     f = open(string)
     g = csv.DictReader(f)
     totalLst = []
@@ -870,11 +883,15 @@ def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
 
 
 #main overworld loop
-def overWorldLoop(mcPositx = 15, mcPosity = 5,mapName= "Test"):
-    #hard coded stat values for testing
-    pLst = [pMember("Troubador", "Wooden Charm")]
-    itemInventory = [item("HealingHerb", 3), item("SoulDrop", 5), item("Rock", 19), item("MegaHerb", 1)]
-    equipInventory = [equipment("Spiked Branch"), equipment("Iron Band"), equipment("Leather Pelt")]
+def overWorldLoop(fileName, mcPositx = 15, mcPosity = 5, mapName= "Test", firstStart=True):
+    global FileName
+    FileName = fileName
+
+    #make a basic character if the game is just being started
+    if (firstStart):
+        pLst = [pMember("Troubador", "Wooden Charm")]
+        itemInventory = []
+        equipInventory = []
     #imports the map layout, data and encounters, as well as the UI for the menu
     mLayout = importMapLayout(mapName)
     mData = importMapData(mapName)
@@ -953,12 +970,13 @@ def overWorldLoop(mcPositx = 15, mcPosity = 5,mapName= "Test"):
 
 #saves the current map's data to the relevant file
 def mapSave(mapName, mLayout, mData):
-    f = open("maps/" + mapName+"/maplayout.txt", "w")
+    global FileName
+    f = open(FileName+"/maps/" + mapName+"/maplayout.txt", "w")
     for line in mLayout:
         line.append("\n")
         f.writelines(line)
     f.close()
-    g = open("maps/" + mapName+"/mapdata.csv", "w")
+    g = open(FileName+"/maps/" + mapName+"/mapdata.csv", "w")
     #lineterminator is used here so that the lines dont' have gaps
     gWriter = csv.writer(g, lineterminator="")
     gWriter.writerow(mData[0].keys())
@@ -1030,11 +1048,6 @@ def getCheckCoord(mcPositx, mcPosity, mcDir):
         return (mcPositx, (max((mcPosity+1), 0)))
     elif mcDir == 3:
         return (max((mcPositx-1), 0), mcPosity)
-
-
-
-
-overWorldLoop()
 
 
 

@@ -6,7 +6,7 @@ import os
 from random import randint
 #Imports Needed methods from strandedBattle. 
 #Could do with a central location for streamlining as program expands
-from strandedBattle import ally, enemy, battle,returnCposits, returnHPstring, waitSpace, loadsprites, clearToLine, printStars
+from strandedBattle import ally, enemy, battle,returnCposits, returnHPstring, waitSpace, loadsprites, clearToLine, printStars, getMenuChoice
 from time import sleep
 from playsound import playsound
 
@@ -328,32 +328,7 @@ def checkEmptyItems(itemLst):
             pass
     return itemLst, removYes
 
-#a very handy method that checks for the player's input on a 1d menu each time it's run. Saves a lot of repeat code
-def getMenuChoice(cOption, optionsCount):
-    event = keyboard.read_event()
-    #the two directions simply return cOption +-1, and loop around if above/below limits
-    if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
-        soundMade("sfx/menuMove.wav")
-        cOption += 1
-        if cOption > optionsCount -1:
-            cOption = 0
-        return cOption
-    elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
-        soundMade("sfx/menuMove.wav")
-        cOption -= 1
-        if cOption <0:
-                cOption = optionsCount -1
-        return cOption
-    #-1 and -2 are used for back and forward. Used to use True and False but since 1 and 0 are Truthy and Falsey it caused errors
-    elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
-        soundMade("sfx/menuMove.wav")
-        return -1
-    elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
-        soundMade("sfx/menuMove.wav")
-        return -2
-    #since the function is run continually as part of a loop, it needs to sometimes just return nothing
-    else:
-        return cOption
+
     
 
 
@@ -394,19 +369,22 @@ def itemLoop(itemInventory, pLst):
         else:
             cOption = choice
     
-
+#the submenu for using an item
 def itemUseInventory(item, pLst):
     print("")
     cOption = 0
     goBack = False
     oList = []
+    #prints the item's name and description
     print(item.Name, ":")
     print(item.description)
+    #adds options to the list depending on if the item is usable/tossable
     if item.usable == True:
         oList.append("Use")
     if item.tossable == True:
         oList.append("Toss")
     oList.append("Back")
+    #sets the point to clear the menu to, to avoid reprinting the above data
     cposits = returnCposits()
     while (goBack == False):
         clearToLine(cposits)
@@ -420,8 +398,10 @@ def itemUseInventory(item, pLst):
         if choice == -1:
             return item, pLst
         elif choice == -2:
+            #if the item is used, use partyChoice to check who the item is used on
             if oList[cOption] == "Use": 
                 return partyChoice(item, pLst)
+            #one last check before item is actually tossed. entire stack is tossed
             elif oList[cOption] == "Toss":
                 print("Really Toss? (Yes: Z) (No: X)")
                 miniGoBack = False
@@ -446,6 +426,7 @@ def partyChoice(item, pLst):
     goBack = False
     while(goBack == False):
         clearToLine(cposits)
+        #displays the HP and MP stats of your party with nice clean bars
         for i in range(len(pLst)):
             cString = " "
             if i == cOption:
@@ -457,6 +438,7 @@ def partyChoice(item, pLst):
         choice = getMenuChoice(cOption, len(pLst))
         if choice == -1:
             return item, pLst
+        #recover stats based on item type
         elif choice == -2:
             if item.eType == "HP+":
                 pLst[cOption].heal(item.power, "hp")
@@ -473,12 +455,13 @@ def partyChoice(item, pLst):
 
 
 
-
+#equipment menu
 def equipLoop(pLst, equipInventory):
     goBack = False
     cOption = 0
     while(goBack == False):
         stdscr.clear()
+        #displays the names of the entire party, with the current option >'d
         print("Party:")
         print("")
         for i in range(len(pLst)):
@@ -489,19 +472,17 @@ def equipLoop(pLst, equipInventory):
             print(cString)
         choice = getMenuChoice(cOption, len(pLst))
         if choice == -1:
-            goBack = True            
+            goBack = True
+        #shows the equipment of the highlighted party member         
         if choice == -2:
             a = equipView(pLst[cOption], equipInventory)
             pLst[cOption] = a[0]
             equipInventory = a[1]
         else:
             cOption = choice
-        if cOption > len(pLst):
-            cOption = 0
-        elif cOption < 0:
-            cOption = len(pLst)
     return pLst, equipInventory
 
+#shows the equipment of the highlighted party member
 def equipView(pMember, equipInventory):
     cposits = returnCposits()
     cOption = 0
@@ -509,6 +490,7 @@ def equipView(pMember, equipInventory):
     while(goBack == False):
         clearToLine(cposits)
         print("-----------------")
+        #makes a list of the member's equipment laid out in proper syntax
         dLst = [("Weapon: " + pMember.eWpn.Name), ("Armour: " + pMember.eAmr.Name), ("Accessory: " + pMember.eAcc.Name)]
         for i in range(3):
             cString = " "
@@ -517,6 +499,7 @@ def equipView(pMember, equipInventory):
             cString+= dLst[i]
             print(cString)
         print("-----------------")
+        #lets me reprint the member's stats so they can change as your equipment changes
         cpositx2 = stdscr.getyx()[1]
         cposity2 = stdscr.getyx()[0]
         pMember.printStats()
@@ -524,6 +507,7 @@ def equipView(pMember, equipInventory):
         if choice == -1:
             goBack = True
         elif choice == -2:
+            #one final sub-menu for selecting the piece of equipment to change to
             x = equipChangeMenu(pMember, equipInventory, cOption, cpositx2, cposity2)
             pMember = x[0]
             equipInventory = x[1]
@@ -533,7 +517,9 @@ def equipView(pMember, equipInventory):
     clearToLine(cposits)
     return pMember, equipInventory
 
+#one final sub-menu for selecting the piece of equipment to change to
 def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
+    #the equpment slot being changed is important as it changes which pieces will be displayed
     if eChoice == 0:
         eChoice = "Weapon"
         e = pMember.eWpn
@@ -552,6 +538,7 @@ def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
         print("-----------------")
         pMember.equip(e)
         cLst = []
+        #prints a list of all the equipment, with the currently equipped being preceeded with an E
         for i in range(len(equipInventory)):
             if (equipInventory[i].slot == eChoice and (equipInventory[i].eType == pMember.eType or equipInventory[i].eType == "All")):
                 cLst.append(equipInventory[i])
@@ -559,6 +546,7 @@ def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
             print(">E ", e.Name)
         else:
             print(" E ", e.Name)
+        #adds useful extra info to the ends of the equipment basd on if it's an improvement
         for i in range(len(cLst)):
             cString = " "
             if (i+1) == cOption:
@@ -581,6 +569,7 @@ def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
                     bText = "(=)"
                 cString+=bText
             print(cString)
+        #this code is semi-unnecessary but does fix a small bug
         if cOption == 0:
             print(e.showStats(e))
             print(e.desc)
@@ -588,6 +577,7 @@ def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
             print(cLst[cOption-1].showStats(e))
             print(cLst[cOption-1].desc)
         choice = getMenuChoice(cOption, (len(cLst)+1))
+        #swaps out the equipment chosen, and fixes all the necessary menus
         if choice == -1:
             goBack = True            
         elif choice == -2:
@@ -608,6 +598,8 @@ def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
             cOption = choice
     return pMember, equipInventory
 
+#status is very simple and just shows the currently selected member's info. the methods in pMember help with this
+#in future, I will need to add the ability to use healing spells from this menu
 def statusLoop(pLst):
     a = loadsprites()
     cOption = 0
@@ -626,7 +618,7 @@ def statusLoop(pLst):
         else:
             cOption = choice
 
-
+#options lets the player turn sound on or off, and maybe other things later
 def optionsLoop():
     stdscr.clear()
     f = open("options.txt")
@@ -655,13 +647,16 @@ def optionsLoop():
 
 
 
-
+#the main menu, allowing access to items, equipment, status and options menus
+#UI data is a pretty menu loaded from a file
 def menuLoop(UIdata, itemInventory, equipInventory, pLst):
     loopDone = False
     cOption = 3
     while(loopDone == False):
         stdscr.clear()
         event = keyboard.read_event()
+        #increases are in sets of 8 to line up with the pretty menu icons
+        #better implementation via curses possible
         if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
             soundMade("sfx/menuMove.wav")
             cOption += 8
@@ -677,6 +672,7 @@ def menuLoop(UIdata, itemInventory, equipInventory, pLst):
             return itemInventory, pLst
         elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
             soundMade("sfx/menuMove.wav")
+            #depending on selection, open the relevant menu
             if cOption == 3:
                 a = itemLoop(itemInventory, pLst)
                 itemInventory = a[0]
@@ -686,6 +682,7 @@ def menuLoop(UIdata, itemInventory, equipInventory, pLst):
             elif cOption == 19:
                 statusLoop(pLst)
             elif cOption == 27:
+                #to prevent un-necessary read/write, options menu only writes after completion
                 x = optionsLoop()
                 f = open("options.txt", "w")
                 f.write(x)
@@ -697,18 +694,23 @@ def menuLoop(UIdata, itemInventory, equipInventory, pLst):
                 string+=" <--"
             print(string)
 
+#imports the set of encounters from the relevant map file
 def importMapEncounters(mapName = "Test"):
     string = "maps/"+ mapName + "/mapencounter.csv"
     f = open(string)
     g = csv.DictReader(f)
     dictLst = []
+    #it's important to move the csv.DictReader file to a list of dictionaries
+    #as this allows me to close f
     for line in g:
         dictLst.append(line)
     f.close()
     return dictLst
 
+#chooses the random encounter the player will fight
 def chooseEncounter(dict, partyLst):
     chanceCounts = []
+    #makes a list of the chances of every individual encounter (should sum to 20 if encounter file correctly written)
     for line in dict:
         chanceCounts.append(int(line["EncNum"]))
     chanceTracker = 0
@@ -717,18 +719,21 @@ def chooseEncounter(dict, partyLst):
         chanceTracker = chanceCounts[i]
     a = randint(1, 20)
     finalID = 0
+    #chooses a finalID based on the list position of the chosen encounter
     for i in range(len(chanceCounts)):
         if a<=chanceCounts[i]:
             finalID = i
             break
+    #starts the battle, and begins the return chain to bring back the relevant info
     for line in dict:
         if int(line["EncID"]) == finalID:
             return startEncounter([line["MemA"], line["MemB"], line["MemC"], line["MemD"]], partyLst)
 
 
-
+#starts the battle with the chosen random encounter
 def startEncounter(memLst, partyLst):
     enemLst = []
+    #only makes an enemy if an actual enemy is in the slot rather than None
     for i in range(4):
         if memLst[i] != "None":
             enemLst.append(enemy(memLst[i]))
@@ -737,12 +742,14 @@ def startEncounter(memLst, partyLst):
         pLst.append(partyLst[i].makeCombattant())
     transitionStart()
     global sound
+    #updates is set to the return of the battle method, so that the pMember can be updated
     updates = battle(pLst, enemLst, sound)
     stdscr.move(0,0)
     transitionStart(True)
     stdscr.move(0,0)
     return updatedParty(partyLst, updates)
 
+#used several times. Makes a smoother screen transition by filling the screen with stars
 def transitionStart(direction = False):
     if direction == True:
         for i in range(15):
@@ -756,23 +763,26 @@ def transitionStart(direction = False):
             cPosity -=1
             stdscr.move(cPosity, 0)
 
-
+#updates all the attributes that can change after a battle
 def updatedParty(partyLst, updates):
     for i in range(len(partyLst)):
         partyLst[i].cHP = updates[0][i].cHP
         partyLst[i].HP = updates[0][i].HP
         partyLst[i].cMP = updates[0][i].cMP
         partyLst[i].MP = updates[0][i].MP
+        #gainEXP is used here instead of just adding EXP so that it can automatically use the levelUp method
         partyLst[i].gainEXP(updates[1])
         partyLst[i].spellList = updates[0][i].spellList
     partyLst[0].bCount = updates[0][0].bCount + updates[2]
     partyLst[0].sCount = updates[0][0].sCount
+    #if a new party member was gained during the battle, it's added to the party
     if updates[3] != False:
         partyLst.append(pMember(updates[3]))
     return partyLst
     
 
-
+#the maplayout is just kept in a text file
+#it gets made into an array of arrays
 def importMapLayout(mapName = "Test"):
     totalLst = []
     string =  "maps\\" + mapName + "\maplayout.txt"
@@ -785,6 +795,7 @@ def importMapLayout(mapName = "Test"):
     f.close()
     return totalLst
 
+#the mapData is a list of all the events, such as chests, NPCs and area transitions
 def importMapData(mapName = "Test"):
     string = "maps\\" + mapName + "\mapdata.csv"
     f = open(string)
@@ -795,6 +806,7 @@ def importMapData(mapName = "Test"):
     f.close()
     return totalLst
 
+#if the position being checked matches the event's position, it gets returned, otherwise -1,-1,-1 is returned
 def getMapEventPosit(data, x, y):
     for i in range(len(data)):
         if int(data[i]["eventx"]) == x and int(data[i]["eventy"]) == y:
@@ -803,7 +815,7 @@ def getMapEventPosit(data, x, y):
 
 
 
-
+#changes the overworld sprite dependant on the mcDir value
 def getMcDir(mcDir):
     if mcDir == 0:
         return "^"
@@ -814,10 +826,12 @@ def getMcDir(mcDir):
     elif mcDir == 3:
         return "<"
 
+#print stitches together all the kwargs, and turns them into strings to get rid of type errors
 def print(*strings):
     strString = ""
     for string in strings:
         strString += str(string)
+    #this try/except format is needed for curses to correctly add. I have no clue why
     try:
         stdscr.addstr(strString)
         stdscr.addstr("\n")
@@ -825,15 +839,18 @@ def print(*strings):
     except curses.error:
         pass
 
+#printMap would in theory be simple, but it should only print the local area around the player in a 20*12 square
 def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
     stdscr.move(0,0)
     stdscr.clrtobot()
     cRangex = 20
     cRangey = 12
+    #sets the bounds on the screen. max is used to prevent the bounds from going out of list 
     lowrangx = max(mcPositx-cRangex, -1)
     highrangx = max(mcPositx+cRangex, len(mdata[0]))
     lowrangy = max(mcPosity-cRangey, -1)
     highrangy = min(mcPosity+cRangey, len(mdata))
+    #linestr is constructed then printed
     for y in range(len(mdata)):
         linestr = "          "
         if (lowrangy<y<highrangy):
@@ -844,6 +861,7 @@ def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
                     else:
                         linestr+=mdata[y][x]
             print(linestr)
+            #the doStars method means stars will only be printed if the map is being transitioned
             printStars(doStars)              
     stdscr.refresh()
 
@@ -851,31 +869,35 @@ def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
 
 
 
-
-def overWorldLoop():
+#main overworld loop
+def overWorldLoop(mcPositx = 15, mcPosity = 5,mapName= "Test"):
+    #hard coded stat values for testing
     pLst = [pMember("Troubador", "Wooden Charm")]
     itemInventory = [item("HealingHerb", 3), item("SoulDrop", 5), item("Rock", 19), item("MegaHerb", 1)]
     equipInventory = [equipment("Spiked Branch"), equipment("Iron Band"), equipment("Leather Pelt")]
-    mapName= "Test"
+    #imports the map layout, data and encounters, as well as the UI for the menu
     mLayout = importMapLayout(mapName)
     mData = importMapData(mapName)
     encData = importMapEncounters(mapName)
     UIData = importUIData()
-    mcPositx = 15
-    mcPosity = 5
-    ##0: North, 1: East, 2: South, 3: West
+    #0: North, 1: East, 2: South, 3: West
     mcDir = 2
     leaveMap = False
-    stepcount = randint(2000, 3000)
+    #stepcount is used to count the number of steps before the next encounter. it's random in a range
+    stepcount = randint(20, 30)
     while(leaveMap == False):
         stdscr.clear()
+        #when the stepcount runs down, an encounter is started
         if stepcount <=0:
             pLst = chooseEncounter(encData, pLst)
-            stepcount = randint(1000, 3000)
+            stepcount = randint(20, 30)
             stdscr.move(0,0)
+            #map is printed again with the stars
             printMap(mLayout, mcPositx, mcPosity, mcDir, True)
-        printMap(mLayout, mcPositx, mcPosity, mcDir)
+        else:
+            printMap(mLayout, mcPositx, mcPosity, mcDir)
         event = keyboard.read_event()
+        #moves the main character and changes their direction. If the space that would be moved to isn't empty, the move doesn't occur
         if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
             mcDir = 2
             if mLayout[mcPosity+1][mcPositx] == "." :
@@ -896,14 +918,19 @@ def overWorldLoop():
             if mLayout[mcPosity][mcPositx-1] == "." :
                 mcPositx -=1
                 stepcount -=1
+        #opens the menu if this key is pressed
         elif event.event_type == keyboard.KEY_DOWN and event.name == 'c'  :
             a = menuLoop(UIData, itemInventory, equipInventory, pLst)
             itemInventory = a[0]
             pLst = a[1]
+        #checks the tile in front of the player
         elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
+            #first, the position they're checking is gotten
             coord = getCheckCoord(mcPositx, mcPosity, mcDir)
+            #then, the list of events is checked against the position being checked
             eventPosit = getMapEventPosit(mData, coord[0], coord[1])
             if (eventPosit!=([-1, -1, -1])):
+                #eventhandler handles the event, then the relevant fields are updated
                 invData = eventHandler(eventPosit, itemInventory, equipInventory)
                 itemInventory = invData[0]
                 equipInventory = invData[1]
@@ -911,8 +938,11 @@ def overWorldLoop():
                     if (eventPosit[0] == "chestItem" or eventPosit[0] =="chestEquip"):
                         mLayout[coord[1]][coord[0]] = "."
                         mData.pop(eventPosit[2])
+                #if the position being checked is an area transition
                 else:
+                    #saves the current map's data to the file
                     mapSave(mapName, mLayout, mData)
+                    #sets the map and player position to the new map
                     mapName = invData[2][0]
                     mcPositx = int(invData[2][1])
                     mcPosity = int(invData[2][2])
@@ -921,6 +951,7 @@ def overWorldLoop():
                     encData = importMapEncounters(mapName)
                     printMap(mLayout, mcPositx, mcPosity, mcDir, True)
 
+#saves the current map's data to the relevant file
 def mapSave(mapName, mLayout, mData):
     f = open("maps/" + mapName+"/maplayout.txt", "w")
     for line in mLayout:
@@ -928,6 +959,7 @@ def mapSave(mapName, mLayout, mData):
         f.writelines(line)
     f.close()
     g = open("maps/" + mapName+"/mapdata.csv", "w")
+    #lineterminator is used here so that the lines dont' have gaps
     gWriter = csv.writer(g, lineterminator="")
     gWriter.writerow(mData[0].keys())
     gWriter.writerow("\n")
@@ -941,9 +973,10 @@ def mapSave(mapName, mLayout, mData):
 
 
 
-
+#handles the events. has access to the relevant fields to change
 def eventHandler(data, Iinventory, Einventory):
     areaChange = "None"
+    #adds items in any quantity from 1-9 to the inventory
     if data[0] == "chestItem":
         soundMade("sfx/pickupCoin.wav")
         waitSpace()
@@ -953,18 +986,22 @@ def eventHandler(data, Iinventory, Einventory):
         print("You found ", quant, " ", dataName, "(s) in the chest!")
         Iinventory = combineStacks(Iinventory)
         waitSpace()
+    #adds a single piece of equipment to the inventory
     elif data[0] == "chestEquip":
         dataName = data[1]
         Einventory.append(equipment(dataName))
         print("You found ", dataName)
         waitSpace()
+    #displays a single line of dialogue
     elif data[0] == "npc":
         print(data[1])
         waitSpace()
+    #transitions the player to a different area
     elif data[0] == "areaTrans":
         areaChange = data[1].split(",")
     return Iinventory, Einventory, areaChange
 
+#if an item the player already has is added, this makes sure they're stacked together
 def combineStacks(itemLst):
     sentLst = []
     i = 0

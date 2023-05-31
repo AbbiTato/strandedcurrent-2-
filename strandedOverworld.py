@@ -1,4 +1,4 @@
-
+import pickle
 import keyboard
 import curses
 import csv
@@ -21,14 +21,46 @@ stdscr = curses.initscr()
 #Hard Coded EXP values. Better implementation useful but not currently needed
 EXPvals = [0, 20, 35, 50, 70, 100, 140, 200, 280, 400, 600]
 
+#Saves the party data on application exit
+def savePlayerData(pLst, mcPositx, mcPosity, map):
+    global FileName
+    with open((FileName+'/pMember1.pkl'), 'wb') as outp:
+        picl1 = pickle.dump(pLst[0], outp, pickle.HIGHEST_PROTOCOL)
+    try:
+        with open((FileName+'/pMember2.pkl'), 'wb') as outp:
+            picl2 = pickle.dump(pLst[1], outp, pickle.HIGHEST_PROTOCOL)
+    except:
+        pass
+    try:
+        with open((FileName+'/pMember3.pkl'), 'wb') as outp:
+            picl3 = pickle.dump(pLst[2], outp, pickle.HIGHEST_PROTOCOL)
+    except:
+        pass
+    try:
+        with open((FileName+'/pMember4.pkl'), 'wb') as outp:
+            picl4 = pickle.dump(pLst[3], outp, pickle.HIGHEST_PROTOCOL)
+    except:
+        pass
+    with open((FileName+'/locatData.txt'), 'wt') as outp:
+        outp.write(str(mcPositx) + "\n")
+        outp.write(str(mcPosity)+ "\n")
+        outp.write(str(map)+ "\n")
+
+
+
+    
+
+
+
 #makes sound a global variable, imports the user's local "options" file, then sets sound based on that
-global sound
-f = open("options.txt")
-if f.readline == "Sound: On":
-    sound = True
-else:
-    sound = False
-f.close()
+def importSound():
+    global sound
+    f = open("options.txt")
+    if f.readline == "Sound: On":
+        sound = True
+    else:
+        sound = False
+    f.close()
 
 #this method only plays sound if the sound variable is True
 def soundMade(path):
@@ -129,13 +161,15 @@ class pMember:
                 self.eAcc = equipment(startAcc)
                 #changes what can be equipped
                 self.eType = row["eType"]
-                #the hero carries the party's cash. If not the hero, bCount is set to -1 to simplify debugging
+                #the hero carries the party's cash and items. If not the hero, bCount is set to -1 to simplify debugging
                 if self.eType == "Hero":
                     self.bCount = 0
                     self.sCount = 0
                 else:
                     self.bCount = -1
                     self.sCount = -1
+                self.itemList = []
+                self.equipList = []
                 #startspells gets split or not depending on if the character has any
                 if row["startSpells"] == "None":
                     self.spellList = []
@@ -683,8 +717,8 @@ def menuLoop(UIdata, itemInventory, equipInventory, pLst):
             soundMade("sfx/menuMove.wav")
             #depending on selection, open the relevant menu
             if cOption == 3:
-                a = itemLoop(itemInventory, pLst)
-                itemInventory = a[0]
+                a = itemLoop(pLst[0].itemList, pLst)
+                pLst[0].itemList = a[0]
                 pLst = a[1]
             elif cOption == 11:
                 equipLoop(pLst, equipInventory)
@@ -880,18 +914,18 @@ def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
 
 
 
-
+def basic_print():
+    print("Yep, this is a basic print")
 
 #main overworld loop
 def overWorldLoop(fileName, mcPositx = 15, mcPosity = 5, mapName= "Test", firstStart=True):
     global FileName
     FileName = fileName
-
+    importSound()
+    somethingHappened = 0
     #make a basic character if the game is just being started
     if (firstStart):
         pLst = [pMember("Troubador", "Wooden Charm")]
-        itemInventory = []
-        equipInventory = []
     #imports the map layout, data and encounters, as well as the UI for the menu
     mLayout = importMapLayout(mapName)
     mData = importMapData(mapName)
@@ -903,6 +937,11 @@ def overWorldLoop(fileName, mcPositx = 15, mcPosity = 5, mapName= "Test", firstS
     #stepcount is used to count the number of steps before the next encounter. it's random in a range
     stepcount = randint(20, 30)
     while(leaveMap == False):
+        if somethingHappened == 1:
+            mapSave(mapName, mLayout, mData)
+            savePlayerData(pLst, mcPositx, mcPosity, mapName)
+            somethingHappened = 0
+        #loop begins and continues here
         stdscr.clear()
         #when the stepcount runs down, an encounter is started
         if stepcount <=0:
@@ -920,26 +959,31 @@ def overWorldLoop(fileName, mcPositx = 15, mcPosity = 5, mapName= "Test", firstS
             if mLayout[mcPosity+1][mcPositx] == "." :
                 mcPosity +=1
                 stepcount -=1
+            somethingHappened = 1
         elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
             mcDir = 0
             if mLayout[mcPosity-1][mcPositx] == "." :
                 mcPosity -=1
                 stepcount -=1
+            somethingHappened = 1
         elif event.event_type == keyboard.KEY_DOWN and event.name == "right":
             mcDir = 1
             if mLayout[mcPosity][mcPositx+1] == "." :
                 mcPositx +=1
                 stepcount -=1
+            somethingHappened = 1
         elif event.event_type == keyboard.KEY_DOWN and event.name == "left":
             mcDir = 3
             if mLayout[mcPosity][mcPositx-1] == "." :
                 mcPositx -=1
                 stepcount -=1
+            somethingHappened = 1
         #opens the menu if this key is pressed
         elif event.event_type == keyboard.KEY_DOWN and event.name == 'c'  :
-            a = menuLoop(UIData, itemInventory, equipInventory, pLst)
-            itemInventory = a[0]
+            a = menuLoop(UIData, pLst[0].itemList, pLst[0].equipList, pLst)
+            pLst[0].itemList = a[0]
             pLst = a[1]
+            somethingHappened = 1
         #checks the tile in front of the player
         elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
             #first, the position they're checking is gotten
@@ -948,9 +992,9 @@ def overWorldLoop(fileName, mcPositx = 15, mcPosity = 5, mapName= "Test", firstS
             eventPosit = getMapEventPosit(mData, coord[0], coord[1])
             if (eventPosit!=([-1, -1, -1])):
                 #eventhandler handles the event, then the relevant fields are updated
-                invData = eventHandler(eventPosit, itemInventory, equipInventory)
-                itemInventory = invData[0]
-                equipInventory = invData[1]
+                invData = eventHandler(eventPosit, pLst[0].itemList, pLst[0].equipList)
+                pLst[0].itemList = invData[0]
+                pLst[0].equipList = invData[1]
                 if invData[2] == "None":
                     if (eventPosit[0] == "chestItem" or eventPosit[0] =="chestEquip"):
                         mLayout[coord[1]][coord[0]] = "."
@@ -967,13 +1011,13 @@ def overWorldLoop(fileName, mcPositx = 15, mcPosity = 5, mapName= "Test", firstS
                     mData = importMapData(mapName)
                     encData = importMapEncounters(mapName)
                     printMap(mLayout, mcPositx, mcPosity, mcDir, True)
+            somethingHappened = 1
 
 #saves the current map's data to the relevant file
 def mapSave(mapName, mLayout, mData):
     global FileName
     f = open(FileName+"/maps/" + mapName+"/maplayout.txt", "w")
     for line in mLayout:
-        line.append("\n")
         f.writelines(line)
     f.close()
     g = open(FileName+"/maps/" + mapName+"/mapdata.csv", "w")
@@ -1048,7 +1092,6 @@ def getCheckCoord(mcPositx, mcPosity, mcDir):
         return (mcPositx, (max((mcPosity+1), 0)))
     elif mcDir == 3:
         return (max((mcPositx-1), 0), mcPosity)
-
 
 
 

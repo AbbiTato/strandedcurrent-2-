@@ -1,3 +1,4 @@
+import pickle
 import curses
 import os
 import keyboard

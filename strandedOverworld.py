@@ -54,22 +54,24 @@ def savePlayerData(pLst, mcPositx, mcPosity, map):
 
 #makes sound a global variable, imports the user's local "options" file, then sets sound based on that
 def importSound():
-    global sound
     f = open("options.txt")
     if f.readline == "Sound: On":
-        sound = True
+        f.close()
+        return True
     else:
-        sound = False
-    f.close()
+        f.close()
+        return False
+    
 
 #this method only plays sound if the sound variable is True
 def soundMade(path):
+    global sound
     if sound == True:
         playsound(path)
 
 ##the equipment class lets me group methods and data to do with the game's equipment
 class equipment():
-    def __init__(self, Name):
+    def __init__(self, Name, cost=0):
         ##import all the item data to the object with only the Name field
         f = open("equipmentData.csv")
         g = csv.DictReader(f)
@@ -86,6 +88,7 @@ class equipment():
                 self.eType = row["eType"]
                 self.desc = row["desc"]
         f.close()
+        self.cost = cost
 
     #showStats is used in a few places to display the equipment's stats. The eWpn passed in is the currently equipped weapon
     #to allow the player to compare the two pieces of gear 
@@ -111,7 +114,7 @@ class equipment():
 
 #groups methods and data to do with inventory items. for streamlining purposes, could have a shared parent of item and equipment
 class item():
-    def __init__(self, Name, count):
+    def __init__(self, Name, count, cost=0):
         #imports all the data based on the Name field
         f = open("itemData.csv")
         g = csv.DictReader(f)
@@ -127,6 +130,7 @@ class item():
                 self.price = int(row["price"])
                 self.description = row["description"]
         f.close()
+        self.cost = cost
     #Item is exceedingly simple, this just changes how many you have.
     #Could possibly be changed to a list/dictionary
     def changeQuant(self, num):
@@ -677,11 +681,14 @@ def optionsLoop():
         print(oLine)
         choice = getMenuChoice(cOption, 2)
         if choice == -1:
+            soundMade("sfx/menuMove.wav")
             return oLine
         elif choice == 0: 
+            soundMade("sfx/menuMove.wav")
             oLine = "Sound: Off"
             sound = False
         elif cOption == 1:
+            soundMade("sfx/menuMove.wav")
             oLine = "Sound: On"
             sound = True
         cOption = choice
@@ -797,11 +804,11 @@ def startEncounter(memLst, partyLst):
 #used several times. Makes a smoother screen transition by filling the screen with stars
 def transitionStart(direction = False):
     if direction == True:
-        for i in range(15):
+        for i in range(14):
             print("**********************************************************************")
             sleep(0.02)
     else:
-        cPosity = 15
+        cPosity = 14
         while(cPosity > 0):
             print("**********************************************************************")
             sleep(0.02)
@@ -918,10 +925,11 @@ def basic_print():
     print("Yep, this is a basic print")
 
 #main overworld loop
-def overWorldLoop(fileName, mcPositx = 15, mcPosity = 5, mapName= "Test", firstStart=True):
+def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "Test", firstStart=True):
     global FileName
     FileName = fileName
-    importSound()
+    global sound
+    sound = importSound()
     somethingHappened = 0
     #make a basic character if the game is just being started
     if (firstStart):
@@ -992,9 +1000,11 @@ def overWorldLoop(fileName, mcPositx = 15, mcPosity = 5, mapName= "Test", firstS
             eventPosit = getMapEventPosit(mData, coord[0], coord[1])
             if (eventPosit!=([-1, -1, -1])):
                 #eventhandler handles the event, then the relevant fields are updated
-                invData = eventHandler(eventPosit, pLst[0].itemList, pLst[0].equipList)
+                invData = eventHandler(eventPosit, pLst[0].itemList, pLst[0].equipList, pLst[0].bCount, pLst[0].sCount)
                 pLst[0].itemList = invData[0]
                 pLst[0].equipList = invData[1]
+                pLst[0].bCount = invData[3]
+                pLst[0].sCount = invData[4]
                 if invData[2] == "None":
                     if (eventPosit[0] == "chestItem" or eventPosit[0] =="chestEquip"):
                         mLayout[coord[1]][coord[0]] = "."
@@ -1018,7 +1028,7 @@ def mapSave(mapName, mLayout, mData):
     global FileName
     f = open(FileName+"/maps/" + mapName+"/maplayout.txt", "w")
     for line in mLayout:
-        f.writelines(line)
+        f.write("".join(line)+"\n")
     f.close()
     g = open(FileName+"/maps/" + mapName+"/mapdata.csv", "w")
     #lineterminator is used here so that the lines dont' have gaps
@@ -1036,7 +1046,7 @@ def mapSave(mapName, mLayout, mData):
 
 
 #handles the events. has access to the relevant fields to change
-def eventHandler(data, Iinventory, Einventory):
+def eventHandler(data, Iinventory, Einventory, bCount, sCount):
     areaChange = "None"
     #adds items in any quantity from 1-9 to the inventory
     if data[0] == "chestItem":
@@ -1061,7 +1071,88 @@ def eventHandler(data, Iinventory, Einventory):
     #transitions the player to a different area
     elif data[0] == "areaTrans":
         areaChange = data[1].split(",")
-    return Iinventory, Einventory, areaChange
+    elif data[0] == "shop":
+        x = shopMenu(data[1], Iinventory, Einventory, bCount, sCount)
+        Iinventory = x[0]
+        Iinventory = combineStacks(Iinventory)
+        Einventory = x[1]
+        bCount = x[2]
+        sCount = x[3]
+    return Iinventory, Einventory, areaChange, bCount, sCount
+
+#opens the menu for the item shop
+def shopMenu(data, Iinventory, Einventory, bCount, sCount):
+    with open("shopdata.csv") as shopdata:
+        shops = csv.DictReader(shopdata)
+        for row in shops:
+            if row["shopID"] == data:
+                shopDict = row
+    shopInv = list(shopDict["shopInventory"].split(","))
+    shopContinuing = True
+    print(shopDict["shopText"])
+    cposits = returnCposits()
+    shopInvLst = []
+    for i in range(0,len(shopInv), 2):
+        if shopDict["shopType"] == "Item":
+            shopInvLst.append(item(shopInv[i], 1, int(shopInv[i+1])))  
+        elif shopDict["shopType"] == "Equipment":
+            shopInvLst.append(equipment(shopInv[i], int(shopInv[i+1]))) 
+    cOption = 0
+    while(shopContinuing):
+        clearToLine(cposits)
+        if shopDict["shopCurrency"] == "Sticks and Stones":
+            print("Sticks and Stones: ", sCount)
+        elif shopDict["shopCurrency"] == "Blood and Bones":
+            print("Blood and Bones: ", bCount)
+        for i in range(len(shopInvLst)):
+            cString = " "
+            if i == cOption:
+                cString = ">"
+            cString+=shopInvLst[i].Name
+            for j in range(15-len(cString)):
+                cString+=" "
+            cString+="||"
+            cString+= str(shopInvLst[i].cost)
+            cString+=" "
+            cString+=shopDict["shopCurrency"]
+            print(cString)
+        choice = getMenuChoice(cOption, len(shopInvLst))
+        if choice == -1:
+            return Iinventory, Einventory, bCount, sCount
+        elif choice == -2:
+            if shopDict["shopCurrency"] == "Sticks and Stones":
+                if shopInvLst[cOption].cost <= sCount:
+                    print("You bought", shopInvLst[cOption].Name)
+                    waitSpace()
+                    if shopDict["shopType"] == "Item":
+                        Iinventory.append(shopInvLst[cOption])
+                    elif shopDict["shopType"] == "Equipment":
+                        Einventory.append(shopInvLst[cOption])
+                    sCount -= shopInvLst[cOption].cost
+                else:
+                    print("You didn't have enough...")
+                    waitSpace()
+            elif shopDict["shopCurrency"] == "Blood and Bones":
+                if shopInvLst[cOption].cost <= bCount:
+                    print("You bought", shopInvLst[cOption].Name)
+                    if shopDict["shopType"] == "Item":
+                        Iinventory.append(shopInvLst[cOption])
+                    elif shopDict["shopType"] == "Equipment":
+                        Einventory.append(shopInvLst[cOption])
+                    bCount -= shopInvLst[cOption].cost
+                else:
+                    print("You didn't have enough...")
+            
+        else:
+            cOption = choice
+
+
+
+
+
+
+
+
 
 #if an item the player already has is added, this makes sure they're stacked together
 def combineStacks(itemLst):

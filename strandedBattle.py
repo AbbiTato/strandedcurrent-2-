@@ -11,14 +11,15 @@ from playsound import playsound
 cmd = 'mode 160,50'
 os.system(cmd)
 stdscr = curses.initscr()
-#while sound is officially set from Battle, it is also set here to make the code not have squiggles
-global sound
-sound = True
 
 #makes a sound if the player has sounds turned on
 def soundMade(path):
-    if sound == True:
-        playsound(path)
+    global sound
+    try:    
+        if sound == True:
+            playsound(path)
+    except:
+        pass
 
 #print stitches together all the kwargs, and turns them into strings to get rid of type errors
 def print(*strings):
@@ -85,10 +86,10 @@ class combattant:
         #damage is minimum 1 so we use a max function to ensure
         dtotal = max((eATK - self.DEF), 1)
         if crit == True:
-            playsound("sfx/crit.wav")
+            soundMade("sfx/crit.wav")
             dtotal = max((eATK * 2), 2)
         else:
-            playsound("sfx/attack.wav")
+            soundMade("sfx/attack.wav")
         print(self.Name+ " took "+  str(dtotal)+ " points of damage!")
         waitSpace()
         self.cHP -= (dtotal)
@@ -222,7 +223,7 @@ class ally(combattant):
         self.spellList = spellList
         self.oATK = self.ATK
         self.oDEF = self.DEF
-        self.Level = Level
+        self.Level = int(Level)
         self.CHA = CHA
         if bCount!=-1:
             self.bCount = bCount
@@ -439,7 +440,7 @@ def buffHandler(stat, ostat, spell, target, debuff = False):
     
 #casts spells. MP has already been deducted, so all that remains is to cast the spell       
 def cast(spell, caster, target):
-    playsound("sfx/spell.wav")
+    soundMade("sfx/spell.wav")
     #spell is cast, damage is calculated
     print(caster.Name+ " cast "+ spell[0]+ "!")
     damage = int((spell[2] +caster.mATK)* spell[3])
@@ -588,16 +589,16 @@ def battle(playerLst, enemLst, soundState):
         #player moves between options
         event = keyboard.read_event()
         if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
-            playsound("sfx/menuMove.wav")
+            soundMade("sfx/menuMove.wav")
             cOption += 2
         elif event.event_type == keyboard.KEY_DOWN and event.name == 'up':
-            playsound("sfx/menuMove.wav")
+            soundMade("sfx/menuMove.wav")
             cOption -= 2
         elif event.event_type == keyboard.KEY_DOWN and event.name == "right":
-            playsound("sfx/menuMove.wav")
+            soundMade("sfx/menuMove.wav")
             cOption +=1
         elif event.event_type == keyboard.KEY_DOWN and event.name == "left":
-            playsound("sfx/menuMove.wav")
+            soundMade("sfx/menuMove.wav")
             cOption -=1
         #when an options is selected, the relevant functions are ran
         elif event.event_type == keyboard.KEY_DOWN and event.name == "z":
@@ -735,7 +736,8 @@ def convoMenu(target, mc):
     stdscr.clear()
     convoData = target.loadConvo()
     #higher demand = lower lenience
-    lenience = -(min((10-target.demand), -1))
+    lenience = (min(-(10-target.demand), -1))
+    waitSpace()
     dChoice = chooseDemand()
     demandPosit = 1
     if dChoice == -1:
@@ -791,7 +793,7 @@ def convoMenu(target, mc):
                                 waitSpace()
                                 return mc, True
                     elif event.event_type == keyboard.KEY_DOWN and event.name == 'x':
-                        playsound("sfx/menuMove.wav")
+                        soundMade("sfx/menuMove.wav")
                         notDone = False
                 #when the loop is exited, if not already returned the player gets the second prize, and the loop exits
                 payout = target.demand * mc.CHA

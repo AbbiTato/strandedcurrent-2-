@@ -1,15 +1,15 @@
 Name,aBonus,dBonus,mBonus,HIT,eBonus,cBonus,slot,eType,desc
 Lead Pipe,5,0,0,14,0,0,Weapon,Hero,A heavy leaden pipe. A symbol of your furious rebellion
-Tiny Knife,7,0,0,17,0,0,Weapon,Small,"A small knife. Sharp, but of poor construction"
-Wooden Spear,7,0,0,17,0,0,Weapon,Medium,"A sharpened branch, really "
-Stone Axe,7,0,0,17,0,0,Weapon,Large,A crude ax made from carved stone
+Sharp Rock,2,0,0,17,0,0,Weapon,Small,A sharp rock that could be used as a weapon by sufficiently small hands
+Wooden Spear,2,0,0,17,0,0,Weapon,Medium,"A sharpened branch, really "
+Stone Axe,2,0,0,17,0,0,Weapon,Large,A crude ax made from carved stone
 Dirt Coating,0,0,0,0,0,0,Armour,All,A thin layer of dirt indicating how badly this beast needs a bath
 Prison Rags,0,3,0,0,0,0,Armour,Humanoid,"The clothes from your days in prison, still stained with sweat"
 Florp Butler Outfit,0,5,0,0,4,0,Armour,Small,What a fetching little guy
 Wooden Charm,0,2,0,0,0,0,Accessory,All,A relic of a peaceful time you barely remember
 Small Rock,2,0,0,0,0,0,Accessory,All,Many monsters find and grow attacked to small pebbles they find
 Spiked Branch,8,0,0,18,0,1,Weapon,Hero,A thorn covered branch. Make sure you hold the right end
-Iron Band,12,12,0,0,0,0,Accessory,All,This small iron band has a pleasing coolness
+Iron Band,5,5,0,0,0,0,Accessory,All,This small iron band has a pleasing coolness
 Clown Costume,9999,9999,0,0,19,19,Armour,All,Become the silliest of them all
 Leather Pelt,2,8,0,0,1,0,Armour,Humanoid,A simple pelt made from animal leather
 Iron Claws,14,0,0,17,0,4,Weapon,Small,Razor sharp claws
@@ -17,3 +17,4 @@ Kunai,34,0,0,20,4,8,Weapon,Small,A ninja's kunai that could be easily held by a 
 None,0,0,0,0,0,0,Accessory,All,Nothing Equipped
 Protective Pads,0,10,0,0,1,0,Armour,All,No-one's the wrong size for proper protective gear!
 Bone Stave,15,0,8,18,0,0,Weapon,Medium,A stave fashioned from bone. Often held by mid-sized monsters
+Tiny Knife,8,0,0,18,0,2,Weapon,Small,"A small knife. Sharp, but of poor construction"

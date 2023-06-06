@@ -50,7 +50,7 @@ def loadPlayerData(FileName):
 #gives the opening text crawl, and starts the game
 def startGame(ipt):
     stdscr.clear()
-    print("For years, you've been doing hard mining labor under the cruel Warden Damocles")
+    print("For years, you've been doing hard mining labor under the cruel Warden Damocles (Z to advance dialogue)")
     waitSpace()
     print("Jailed for a crime you can't quite remember, forced to suffer countless beatings. ")
     waitSpace()

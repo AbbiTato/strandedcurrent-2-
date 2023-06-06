@@ -3,3 +3,4 @@ HealingHerb,HP+,30,1,1,1,2,A simple herb that can be an effective treatment when
 SoulDrop,MP+,10,1,1,1,20,"This strange stone can restore mental energy, making it a popular item on college campuses across the galaxy"
 Rock,Key,0,0,1,0,1,Just a rock. Someone might have a use for this? 
 MegaHerb,HPMP+,9999,1,0,0,3000,"This rare plant is the holy grail of botanists. Upon ingestion it can recover individuals on their deathbed to perfect health, and mages exhausted after a day's casting to flinging spells in an instant"
+OilyFruit,HP+,10,1,1,1,5,"An oily, mushy, kind of disgusting fruit. Certainly edible, but should you?"

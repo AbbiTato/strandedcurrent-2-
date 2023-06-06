@@ -1,0 +1,36 @@
+iD,eventName,eventContents,eventx,eventy
+0,areaTrans,"startCave, 11, 1",149,37
+1,areaTrans,"startCave, 12, 1",150,37
+2,chestItem,SoulDrop1,151,44
+3,chestEquip,Small Rock,155,35
+4,campfire,campfire,147,33
+5,chestEquip,Spiked Branch,103,34
+6,chestItem,HealingHerb1,50,41
+7,chestItem,OilyFruit1,96,29
+8,chestItem,OilyFruit1,99,29
+9,chestItem,OilyFruit1,103,29
+10,chestEquip,Tiny Knife,89,38
+11,chestItem,HealingHerb1,50,39
+12,chestItem,OilyFruit1,49,26
+13,chestItem,OilyFruit1,52,26
+14,chestItem,OilyFruit1,55,26
+15,chestEquip,Iron Band,9,29
+16,chestItem,OilyFruit1,2,18
+17,chestItem,OilyFruit1,5,18
+18,chestItem,OilyFruit1,9,18
+19,areaTrans,"shopCave,10,10",40,19
+20,chestItem,HealingHerb4,27,8
+21,chestItem,OilyFruit1,64,3
+22,chestItem,OilyFruit1,67,3
+23,chestItem,OilyFruit1,71,3
+24,chestItem,OilyFruit1,88,11
+25,chestItem,OilyFruit1,91,11
+26,chestItem,OilyFruit1,95,11
+27,chestEquip,Protective Pads,130,11
+28,chestItem,OilyFruit1,151,17
+29,chestItem,OilyFruit1,154,17
+30,chestItem,OilyFruit1,158,17
+31,campfire,campfire,155,7
+32,chestItem,Bone Stave,156,29
+33,npc,This is where the sewers will be,140,6
+34,npc,This is where the sewers will be,141,6

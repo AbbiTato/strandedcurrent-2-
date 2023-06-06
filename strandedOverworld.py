@@ -747,7 +747,6 @@ def menuLoop(UIdata, itemInventory, equipInventory, pLst):
 #imports the set of encounters from the relevant map file
 def importMapEncounters(mapName = "Test"):
     global FileName
-
     string = FileName+"/maps/"+ mapName + "/mapencounter.csv"
     f = open(string)
     g = csv.DictReader(f)
@@ -925,7 +924,7 @@ def basic_print():
     print("Yep, this is a basic print")
 
 #main overworld loop
-def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "Test", firstStart=True):
+def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "startCave", firstStart=True):
     global FileName
     FileName = fileName
     global sound
@@ -952,7 +951,7 @@ def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "Test
         #loop begins and continues here
         stdscr.clear()
         #when the stepcount runs down, an encounter is started
-        if stepcount <=0:
+        if stepcount <=0 and encData[0]["EncNum"] != "-1":
             pLst = chooseEncounter(encData, pLst)
             stepcount = randint(20, 30)
             stdscr.move(0,0)
@@ -960,6 +959,14 @@ def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "Test
             printMap(mLayout, mcPositx, mcPosity, mcDir, True)
         else:
             printMap(mLayout, mcPositx, mcPosity, mcDir)
+        if firstStart == True:
+            print("Your head hurts like hell. You're still clutching the pipe you used for your escape")
+            waitSpace()
+            print("Well, you'd better look around")
+            waitSpace()
+            print("CONTROLS: Arrow Keys to move. Z to interact and confirm, X to go back. C opens the menu")
+            waitSpace()
+            firstStart = False
         event = keyboard.read_event()
         #moves the main character and changes their direction. If the space that would be moved to isn't empty, the move doesn't occur
         if event.event_type == keyboard.KEY_DOWN and event.name == 'down':
@@ -1005,6 +1012,15 @@ def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "Test
                 pLst[0].equipList = invData[1]
                 pLst[0].bCount = invData[3]
                 pLst[0].sCount = invData[4]
+                if invData[5] == True:
+                    printMap(mData, mcPositx, mcPosity, mcDir, True)
+                    for member in pLst:
+                        member.cHP = member.HP
+                        member.cMP = member.MP
+                    print("You rested for a while, and recovered your strength")
+                    waitSpace()
+                
+                
                 if invData[2] == "None":
                     if (eventPosit[0] == "chestItem" or eventPosit[0] =="chestEquip"):
                         mLayout[coord[1]][coord[0]] = "."
@@ -1025,20 +1041,25 @@ def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "Test
 
 #saves the current map's data to the relevant file
 def mapSave(mapName, mLayout, mData):
-    global FileName
-    f = open(FileName+"/maps/" + mapName+"/maplayout.txt", "w")
-    for line in mLayout:
-        f.write("".join(line)+"\n")
-    f.close()
-    g = open(FileName+"/maps/" + mapName+"/mapdata.csv", "w")
-    #lineterminator is used here so that the lines dont' have gaps
-    gWriter = csv.writer(g, lineterminator="")
-    gWriter.writerow(mData[0].keys())
-    gWriter.writerow("\n")
-    for line in mData:
-        gWriter.writerow(line.values())
+    try:
+        global FileName
+        f = open(FileName+"/maps/" + mapName+"/maplayout.txt", "w")
+        for line in mLayout:
+            f.write("".join(line)+"\n")
+        f.close()
+        g = open(FileName+"/maps/" + mapName+"/mapdata.csv", "w")
+        #lineterminator is used here so that the lines dont' have gaps
+        gWriter = csv.writer(g, lineterminator="")
+        gWriter.writerow(mData[0].keys())
         gWriter.writerow("\n")
-    g.close()
+        for line in mData:
+            gWriter.writerow(line.values())
+            gWriter.writerow("\n")
+        g.close()
+        print("Game saved")
+        sleep(0.0002)
+    except:
+        pass
         
 
 
@@ -1048,6 +1069,7 @@ def mapSave(mapName, mLayout, mData):
 #handles the events. has access to the relevant fields to change
 def eventHandler(data, Iinventory, Einventory, bCount, sCount):
     areaChange = "None"
+    fullHeal = False
     #adds items in any quantity from 1-9 to the inventory
     if data[0] == "chestItem":
         soundMade("sfx/pickupCoin.wav")
@@ -1078,7 +1100,9 @@ def eventHandler(data, Iinventory, Einventory, bCount, sCount):
         Einventory = x[1]
         bCount = x[2]
         sCount = x[3]
-    return Iinventory, Einventory, areaChange, bCount, sCount
+    elif data[0] == "campfire":
+        fullHeal = True
+    return Iinventory, Einventory, areaChange, bCount, sCount, fullHeal
 
 #opens the menu for the item shop
 def shopMenu(data, Iinventory, Einventory, bCount, sCount):

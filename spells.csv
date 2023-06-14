@@ -1,4 +1,4 @@
-PowerUP,MP Cost,Base Power,Multiplier,Element,silenceStop?,Target,statScale
+Name,MP Cost,Base Power,Multiplier,Element,silenceStop?,Target,statScale
 Blaze,2,10,1,Fire,TRUE,enemOne,INT
 Icestorm,15,100,1,Ice,TRUE,enemAll,INT
 Cure,4,30,1,Heal,TRUE,partyOne,INT

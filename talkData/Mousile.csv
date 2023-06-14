@@ -1,11 +1,11 @@
 qNum,question,ansCorrect,ansNeutral,ansIncorrect
-0,Eyesoar glares at you,Pretend you don't notice,Return the glare,Act afraid
-1,Eyesoar's eyes pierce your very soul,Think evil thoughts,Think good thoughts,Think no thoughts
-2,The eyes seem a little dried out,Splash some dirty water on the eyes,Do nothing,Splash some clean water on the eyes3$
-3,All of eyesoar's eyes look towards your food bag,Do nothing,Give it a lot9$,Give it a little1$
-4,You suddenly feel a splitting headache,Imagine eyesoar having a headache3!,Try to clear your mind,Take the headache3!
-5,A great heat emminates from eyesoar,Throw a few bones into the heat4$,Step closer5!,Throw a few sticks into the heat3*
-6,Eyesoar's eyes bash into you with a slight thud,Laugh,Wince,Retaliate
-7,"Eyesoar collapses into a heap, seemingly trying to rest",Start to leave,Peer into the eyes3!,Do nothing
-8,Eyesoar starts a small fire at your feet,Pretend not to notice7!,Stamp it out1!,Jump out of the way
-9,Eyesoar tries to sneak up being you,"Wait until it comes close, then turn around and startle it",Let it approach2!,Make it clear you can see it
+0,Mousile nibbles on your weapon,Let it chew4%,Pull it away quickly3!,Pull it away slowly
+1,You see Mousile looking at a collection of seeds that've collected on your boots,Proffer your foot4!,Kick the seeds towards Mousile,Ignore it
+2,Mousile seems to have pricked itself on a thorn,Give up some medical supplies3£,Use soothing words,Ignore it
+3,Another Mousile is walking by. The Mousiles regard each other cautiously,"""I have your back, don't worry""",Shoo the other mousile away,"""Aww, are you two friends?"""
+4,Another Mousile is walking by. The Mousiles seem curious of each other,"""Aww, are you two friends?""",Shoo the other mousile away,"""I have your back, don't worry"""
+5,A growl emminates from Mousile's stomach,Offer it some seeds from the ground,Offer it some of your Blood and Bones5$,Ignore it
+6,Mousile is scratching vigorously behind it's ear. You notice a nearby DevillSnake,Bash the DevillSnake3!,Point the DevillSnake out to Mousile,Do nothing
+7,Mousile approaches and rubs against your foot,Reach down and softly stroke it,Stand very still,Shake it off 7!
+8,"Mousile screeches, it seems to have been hit by an Eyesoar's Blaze",Throw some of your water on the fire 2!,Stamp it out1!,Toss some sticks4£
+9,Mousile gets up in it's hind legs,Rub the side of it's head,Shake it's hand,Push it over

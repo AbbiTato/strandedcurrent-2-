@@ -1,7 +1,5 @@
 EncID,EncNum,MemA,MemB,MemC,MemD
-0,12,Florp,None,None,None
+0,10,Florp,None,None,None
 1,4,Florp,Eyesoar,None,None
-2,1,Florp ,Florp,Florp,None
-3,1,Mousile,None,None,None
-4,1,Florp,Magus Florp,Florp,None
-5,1,FlailTail,None,None,None
+2,3,Florp,Florp,Florp,None
+3,3,Mousile,None,None,None

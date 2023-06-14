@@ -921,8 +921,11 @@ def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
 
 
 
-def basic_print():
-    print("Yep, this is a basic print")
+def maxLineLen(data):
+    sentlen = 0
+    for line in data:
+        sentlen = max(sentlen, len(line))
+    return sentlen
 
 #main overworld loop
 def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "startCave", firstStart=True):

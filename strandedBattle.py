@@ -80,6 +80,14 @@ class combattant:
         self.oATK = self.ATK
         self.oDEF = self.DEF
         self.omATK = mATK
+    
+    def boundStats(self):
+        if self.ATK < 1:
+            self.ATK = 1 
+        if self.DEF < 1:
+            self.ATK = 1 
+        if self.mATK < 1:
+            self.ATK = 1 
 
     #takeDamage only needs the attack of the attacker and whether it was a crit, then everything else relevant is already here
     def takeDamage(self, eATK, crit):
@@ -397,44 +405,45 @@ def waitSpace():
             x = False
 
 #buffHandler increases or decreases target's stats        
-def buffHandler(stat, ostat, spell, target, debuff = False):
+def buffHandler(spell, target):
     #x is set to the correct stat
-    if stat == "ATK":
+    if spell[4] == "ATK":
         x = target.ATK
-    elif stat == "DEF":
+    elif spell[4] == "DEF":
         x = target.DEF
-    elif stat == "mATK":
+    elif spell[4] == "mATK":
         x = target.mATK
+    ox = x
     x = int(x*spell[3])
-    if (x < 1):
-        x = 1
+    print(x)
+    waitSpace()
+    if x < 1:
+        if spell[3] >= 0:
+            x = 1
+        elif spell[3] < 0:
+            x = -1
+    elif x > 250:
+        x = 250
+    elif x < -250:
+        x = -250
     #to cut down on code word and word2 are used with concatenation to make later strings
     word = " increased "
-    word2 = " higher "
-    word3 = " maximum "
-    num = 3
-    if debuff == True:
+    if spell[3] < 0:
         word = " decreased "
-        word2 = " lower "
-        word3 = " minimum "
-        num = 0.3
-    print(target.Name+"'s " + str(stat)+word+ "by "+ str(x)+ " points!")
+    if spell[4] == "ATK":
+        a = target.ATK + x
+        target.ATK += x
+    elif spell[4] == "DEF":
+        a = target.DEF + x
+        target.DEF += x
+    elif spell[4] == "mATK":
+        a = target.mATK + x
+        target.mATK += x
+    target.boundStats()
+    print(target.Name+"'s " + str(spell[4])+word+ "by "+ str(abs(x))+ " points! (Original stat: " + str(ox) + " New stat: " + str(a) + ")")
     waitSpace()
-    #caps and bottoms are taken into account
-    if stat=="ATK" and target.ATK>(max((ostat*num), num)):
-            print("But "+target.Name+"'s ATK can't go any"+ word2+"! (Stat"+ word+"to"+word3)
-            waitSpace()
-            target.ATK = int(target.oATK *num)
-    elif stat=="DEF" and target.DEF>(max((ostat*num), num)):
-            print("But "+target.Name+"'s DEF can't go any"+ word2+"! (Stat"+ word+"to"+word3)
-            waitSpace()
-            target.DEF = target.oDEF *num
-            if target.DEF % 1 !=0:
-                target.DEF = -1
-    elif stat=="mATK" and target.mATK>(max((ostat*num), num)):
-            print("But "+target.Name+"'s mATK can't go any"+ word2+"! (Stat"+ word2+"to"+word3)
-            waitSpace()
-            target.mATK = int(target.omATK *num)
+    
+    
 
 
     
@@ -452,18 +461,8 @@ def cast(spell, caster, target):
         if (caster.cHP >= caster.HP):
             caster.cHP = caster.HP
     #could maybe be simplified but works
-    elif spell[4] == "ATK+":
-        buffHandler("ATK", target.oATK, spell, target)
-    elif spell[4] == "DEF+":
-        buffHandler("DEF", target.oDEF, spell, target)
-    elif spell[4] == "mATK+":
-        buffHandler("mATK", target.omATK, spell, target)
-    elif spell[4] == "ATK-":
-        buffHandler("ATK", target.oATK, spell, target, True)
-    elif spell[4] == "DEF-":
-        buffHandler("DEF", target.oDEF, spell, target, True)
-    elif spell[4] == "mATK-":
-        buffHandler("mATK", target.omATK, spell, target,True)
+    elif spell[4] == "ATK" or spell[4] == "DEF" or spell[4] == "mATK":
+        buffHandler(spell, target)
     else:
         target.takeDamage(damage, caster.critCheck("Spell"))
         waitSpace()

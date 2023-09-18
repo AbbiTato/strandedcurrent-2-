@@ -803,7 +803,7 @@ def startEncounter(memLst, partyLst):
 #used several times. Makes a smoother screen transition by filling the screen with stars
 def transitionStart(direction = False):
     if direction == True:
-        for i in range(14):
+        for i in range(13):
             print("**********************************************************************")
             sleep(0.02)
     else:
@@ -924,7 +924,7 @@ def basic_print():
     print("Yep, this is a basic print")
 
 #main overworld loop
-def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "startCave", firstStart=True):
+def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "Test", firstStart=True):
     global FileName
     FileName = fileName
     global sound
@@ -1056,7 +1056,7 @@ def mapSave(mapName, mLayout, mData):
             gWriter.writerow(line.values())
             gWriter.writerow("\n")
         g.close()
-        print("Game saved")
+        #print("Game saved")
         sleep(0.0002)
     except:
         pass

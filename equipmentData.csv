@@ -4,7 +4,7 @@ Sharp Rock,2,0,0,17,0,0,Weapon,Small,A sharp rock that could be used as a weapon
 Wooden Spear,2,0,0,17,0,0,Weapon,Medium,"A sharpened branch, really "
 Stone Axe,2,0,0,17,0,0,Weapon,Large,A crude ax made from carved stone
 Dirt Coating,0,0,0,0,0,0,Armour,All,A thin layer of dirt indicating how badly this beast needs a bath
-Prison Rags,0,3,0,0,0,0,Armour,Humanoid,"The clothes from your days in prison, still stained with sweat"
+Prison Rags,0,3,0,0,0,0,Armour,Hero,"The clothes from your days in prison, still stained with sweat"
 Florp Butler Outfit,0,5,0,0,4,0,Armour,Small,What a fetching little guy
 Wooden Charm,0,2,0,0,0,0,Accessory,All,A relic of a peaceful time you barely remember
 Small Rock,2,0,0,0,0,0,Accessory,All,Many monsters find and grow attacked to small pebbles they find

@@ -74,8 +74,8 @@ class combattant:
         self.HIT = HIT
         self.DODGE = DODGE
         self.CRIT = CRIT
-        self.cHP = cHP
-        self.cMP = cMP
+        self.cHP = HP
+        self.cMP = MP
         #the oStats are needed so that stats can be boosted/drained to a cap or reset
         self.oATK = self.ATK
         self.oDEF = self.DEF

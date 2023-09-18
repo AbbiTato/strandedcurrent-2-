@@ -640,6 +640,7 @@ def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
                 if eChoice == "Accessory":
                     equipInventory.append(pMember.eAcc)
                     pMember.eAcc = cLst[cOption-1]
+                    e = pMember.eAcc
                 equipInventory.remove(cLst[cOption-1])
         else:
             cOption = choice
@@ -899,10 +900,10 @@ def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
     cRangex = 20
     cRangey = 12
     #sets the bounds on the screen. max is used to prevent the bounds from going out of list 
-    lowrangx = max(mcPositx-cRangex, -1)
-    highrangx = max(mcPositx+cRangex, len(mdata[0]))
-    lowrangy = max(mcPosity-cRangey, -1)
-    highrangy = min(mcPosity+cRangey, len(mdata))
+    lowrangx = max((mcPositx-cRangex), -1)
+    highrangx = min((mcPositx+cRangex), (len(mdata[mcPosity])))
+    lowrangy = max((mcPosity-cRangey), -1)
+    highrangy = min((mcPosity+cRangey), (len(mdata)))
     #linestr is constructed then printed
     for y in range(len(mdata)):
         linestr = "          "
@@ -920,8 +921,11 @@ def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
 
 
 
-def basic_print():
-    print("Yep, this is a basic print")
+def maxLineLen(data):
+    sentlen = 0
+    for line in data:
+        sentlen = max(sentlen, len(line))
+    return sentlen
 
 #main overworld loop
 def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "Test", firstStart=True):
@@ -1056,8 +1060,11 @@ def mapSave(mapName, mLayout, mData):
             gWriter.writerow(line.values())
             gWriter.writerow("\n")
         g.close()
+<<<<<<< HEAD
         #print("Game saved")
         sleep(0.0002)
+=======
+>>>>>>> 7438989d932b4d86e4a08ed276800397f4d363f2
     except:
         pass
         
@@ -1077,14 +1084,14 @@ def eventHandler(data, Iinventory, Einventory, bCount, sCount):
         quant = int(data[1][-1])
         dataName = data[1][:-1]
         Iinventory.append(item(dataName, quant))
-        print("You found ", quant, " ", dataName, "(s) in the chest!")
+        print("You found ", quant, " ", dataName, "(s)!")
         Iinventory = combineStacks(Iinventory)
         waitSpace()
     #adds a single piece of equipment to the inventory
     elif data[0] == "chestEquip":
         dataName = data[1]
         Einventory.append(equipment(dataName))
-        print("You found ", dataName)
+        print("You found a ", dataName)
         waitSpace()
     #displays a single line of dialogue
     elif data[0] == "npc":
@@ -1171,13 +1178,6 @@ def shopMenu(data, Iinventory, Einventory, bCount, sCount):
             cOption = choice
 
 
-
-
-
-
-
-
-
 #if an item the player already has is added, this makes sure they're stacked together
 def combineStacks(itemLst):
     sentLst = []
@@ -1197,7 +1197,7 @@ def combineStacks(itemLst):
 
         
 
-
+#gets the location the player is checking based on where they're facing
 def getCheckCoord(mcPositx, mcPosity, mcDir):
     if mcDir == 0:
         return (mcPositx, (max((mcPosity-1), 0)))
@@ -1207,8 +1207,4 @@ def getCheckCoord(mcPositx, mcPosity, mcDir):
         return (mcPositx, (max((mcPosity+1), 0)))
     elif mcDir == 3:
         return (max((mcPositx-1), 0), mcPosity)
-
-
-
-
 

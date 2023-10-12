@@ -928,7 +928,7 @@ def maxLineLen(data):
     return sentlen
 
 #main overworld loop
-def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "startCave", firstStart=True):
+def overWorldLoop(fileName, pLst=[], mcPositx = 15, mcPosity = 5, mapName= "Test", firstStart=True):
     global FileName
     FileName = fileName
     global sound

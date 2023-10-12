@@ -804,7 +804,7 @@ def startEncounter(memLst, partyLst):
 #used several times. Makes a smoother screen transition by filling the screen with stars
 def transitionStart(direction = False):
     if direction == True:
-        for i in range(14):
+        for i in range(13):
             print("**********************************************************************")
             sleep(0.02)
     else:
@@ -1060,6 +1060,11 @@ def mapSave(mapName, mLayout, mData):
             gWriter.writerow(line.values())
             gWriter.writerow("\n")
         g.close()
+<<<<<<< HEAD
+        #print("Game saved")
+        sleep(0.0002)
+=======
+>>>>>>> 7438989d932b4d86e4a08ed276800397f4d363f2
     except:
         pass
         

@@ -43,25 +43,25 @@ def makedbntbls1():
     con.commit()
     print(cur.execute("SELECT spellID, spellName, basePower FROM spellData").fetchall())
     print(cur.execute("SELECT entID, entName, MP FROM entData").fetchall())
-    print(cur.execute("SELECT spellID, entID, spellRank FROM entSpells").fetchall())
+    print(cur.execute("SELECT spellID, entID, spellRank FROM entSpells").fetchall()[0][2])
     cur.close()
     
 def makedbntbls2():
     con = sqlite3.connect("strandedData.db")
     cur = con.cursor()
-    cur.execute("CREATE TABLE itemData(itemID INT(3) NOT NULL PRIMARY KEY, name VARCHAR(30), canEquip BOOLEAN NOT NULL, usable BOOLEAN, price INT(4), description VARCHAR(100))")
+    cur.execute("CREATE TABLE itemData(itemID INT(3) NOT NULL PRIMARY KEY, name VARCHAR(30), canEquip BOOLEAN NOT NULL, usable BOOLEAN, price INT(4), description VARCHAR(100), power INT(3), rtype VARCHAR(4))")
     cur.execute("CREATE TABLE equipData(itemID INT(3) NOT NULL, eSlot VARCHAR(10), aBonus INT(3), dBonus INT(3), mBonus INT(3), hitDodge INT(4), FOREIGN KEY(itemID) REFERENCES itemData(itemID))")
     cur.execute("CREATE TABLE shopData(shopID INT(3) NOT NULL PRIMARY KEY, entryText VARCHAR(100), currencTyp CHAR(1))")
     cur.execute("CREATE TABLE shopItem(itemID INT(3) NOT NULL, shopID INT(3) NOT NULL, FOREIGN KEY(itemID) REFERENCES itemData(itemID), FOREIGN KEY(shopID) REFERENCES shopData(shopID))")
     cur.execute("""INSERT INTO itemData VALUES
-                (1, 'Healing Herb', 0, 1, 10, 'This simple herb is a fixture of the planets simple but effective herbal remedies'),
-                (2, 'Lead Pipe', 1, 0, 20, 'A heavy and inaccurate leaden pipe. A symbol of your furious rebellion'),
-                (3, 'Spiked Branch', 1, 0, 50, 'Watch it with the spikes! An accurate and strong weapon'),
-                (4, 'Dirty Rags', 1, 0 , 20, 'The rags that covered your body as you worked under damocles. Dont offer much protection'),
-                (5, 'Leather Jerkin', 1, 0, 60, 'Simple defensive armour made from florp leather'),
-                (6, 'Iron Gauntlets', 1, 0, 40, 'These iron gloves deflect certain blows'),
-                (7, 'Main-Gauche', 1, 0, 80, 'An offhand knife that raises attack power'),
-                (8, 'Magic charm', 1, 0, 100, 'This handmade charm raises magical strength')
+                (1, 'Healing Herb', 0, 1, 10, 'This simple herb is a fixture of the planets simple but effective herbal remedies', 30, 'hp'),
+                (2, 'Lead Pipe', 1, 0, 20, 'A heavy and inaccurate leaden pipe. A symbol of your furious rebellion', 0, ''),
+                (3, 'Spiked Branch', 1, 0, 50, 'Watch it with the spikes! An accurate and strong weapon', 0, ''),
+                (4, 'Dirty Rags', 1, 0 , 20, 'The rags that covered your body as you worked under damocles. Dont offer much protection', 0, ''),
+                (5, 'Leather Jerkin', 1, 0, 60, 'Simple defensive armour made from florp leather', 0, ''),
+                (6, 'Iron Gauntlets', 1, 0, 40, 'These iron gloves deflect certain blows', 0, ''),
+                (7, 'Main-Gauche', 1, 0, 80, 'An offhand knife that raises attack power', 0, ''),
+                (8, 'Magic charm', 1, 0, 100, 'This handmade charm raises magical strength', 0, '')
                 """)
     cur.execute("""INSERT INTO equipData VALUES
                 (2, 'Weapon', 5, 0, 0, 70),
@@ -75,10 +75,24 @@ def makedbntbls2():
     print(cur.execute("""SELECT * FROM equipData""").fetchall())
     print(cur.execute("""SELECT * FROM shopData""").fetchall())
     print(cur.execute("""SELECT * FROM shopItem""").fetchall())
+
+
     
-def reversedbtbls2():
+def reversedbtbls():
     con = sqlite3.connect("strandedData.db")
     cur = con.cursor()
+    try:
+        cur.execute("DROP TABLE spellData")
+    except:
+        pass
+    try:
+        cur.execute("DROP TABLE entSpells")
+    except:
+        pass
+    try:
+        cur.execute("DROP TABLE entData")
+    except:
+        pass
     try:
         cur.execute("DROP TABLE itemData")
     except:
@@ -98,5 +112,6 @@ def reversedbtbls2():
 
 
     
-reversedbtbls2()
+reversedbtbls()
+makedbntbls1()
 makedbntbls2()

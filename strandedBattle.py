@@ -92,7 +92,7 @@ class combattant:
     #takeDamage only needs the attack of the attacker and whether it was a crit, then everything else relevant is already here
     def takeDamage(self, eATK, crit):
         #damage is minimum 1 so we use a max function to ensure
-        dtotal = max((eATK - self.DEF), 1)
+        dtotal = max((eATK - (self.DEF/2), 1))
         if crit == True:
             soundMade("sfx/crit.wav")
             dtotal = max((eATK * 2), 2)

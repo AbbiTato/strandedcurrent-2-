@@ -9,6 +9,7 @@ from random import randint
 from strandedBattle import ally, enemy, battle,returnCposits, returnHPstring, waitSpace, loadsprites, clearToLine, printStars, getMenuChoice
 from time import sleep
 from playsound import playsound
+import sqlite3
 #sets the currently being accessed save file
 global FileName
 FileName = ""
@@ -114,23 +115,20 @@ class equipment():
 
 #groups methods and data to do with inventory items. for streamlining purposes, could have a shared parent of item and equipment
 class item():
-    def __init__(self, Name, count, cost=0):
-        #imports all the data based on the Name field
-        f = open("itemData.csv")
-        g = csv.DictReader(f)
+    def __init__(self, iD, count):
+        #imports all the data based on the iD field
+        con = sqlite3.connect("strandedData.db")
+        cur = con.cursor()
+        itemRow = cur.execute("SELECT itemID, name, canEquip, usable, description, power, rtype FROM entSpells WHERE itemID =", id).fetchall()[0]
         self.count = count
-        for row in g:
-            if (row["Name"] == Name):
-                self.Name = row["Name"]
-                self.eType = row["eType"]
-                self.power = int(row["power"])
-                self.usable = bool(int(row["usable"]))
-                self.tossable = bool(int(row["tossable"]))
-                self.sellable = bool(int(row["sellable"]))
-                self.price = int(row["price"])
-                self.description = row["description"]
-        f.close()
-        self.cost = cost
+        self.itemID = itemRow[0]
+        self.name = itemRow[1]
+        self.canEquip = itemRow[2]
+        self.usable = itemRow[3]
+        self.description = itemRow[4]
+        self.power = itemRow[5]
+        self.rtype = itemRow[6]
+        cur.close()
     #Item is exceedingly simple, this just changes how many you have.
     #Could possibly be changed to a list/dictionary
     def changeQuant(self, num):
@@ -920,11 +918,10 @@ def printMap(mdata, mcPositx, mcPosity, mcDir, doStars = False):
     stdscr.refresh()
 
 
-
+#finds the width of one of the ascii sprite files
 def maxLineLen(data):
-    sentlen = 0
     for line in data:
-        sentlen = max(sentlen, len(line))
+        sentlen = max(0, len(line))
     return sentlen
 
 #main overworld loop

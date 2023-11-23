@@ -1,6 +1,6 @@
 EncID,EncNum,MemA,MemB,MemC,MemD
-0,15,Florp,None,None,None
-1,0,Florp,Florp,None,None
-2,0,Florp,Florp,Florp,None
-3,5,Florp,Eyesoar,None,None
-4,0,Florp,Eyesoar,Florp,None
+0,15,1,0,0,0
+1,0,1,Florp,0,0
+2,0,1,1,1,0
+3,5,1,2,0,0
+4,0,1,2,1,0

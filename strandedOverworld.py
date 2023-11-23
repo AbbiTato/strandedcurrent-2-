@@ -72,24 +72,22 @@ def soundMade(path):
 
 ##the equipment class lets me group methods and data to do with the game's equipment
 class equipment():
-    def __init__(self, Name, cost=0):
-        ##import all the item data to the object with only the Name field
-        f = open("equipmentData.csv")
-        g = csv.DictReader(f)
-        for row in g:
-            if (row["Name"] == Name):
-                self.Name = row["Name"]
-                self.aBonus = int(row["aBonus"])
-                self.dBonus = int(row["dBonus"])
-                self.mBonus = int(row["mBonus"])
-                self.HIT = int(row["HIT"])
-                self.eBonus = int(row["eBonus"])
-                self.cBonus = int(row["cBonus"])
-                self.slot = row["slot"]
-                self.eType = row["eType"]
-                self.desc = row["desc"]
-        f.close()
-        self.cost = cost
+    def __init__(self, iD):
+        ##import all the item data to the object with only the id field using SQL
+        con = sqlite3.connect("strandedData.db")
+        cur = con.cursor()
+        equipRow = cur.execute("SELECT itemID, itemData.name, itemData.price, itemData.description, eSlot, aBonus, dBonus, mBonus, hitDodge, cBonus FROM equipData INNER JOIN itemData ON equipData.itemID = itemData.itemID WHERE itemID =", id).fetchall()[0] 
+        self.itemID = equipRow[0]
+        self.name = equipRow[1]
+        self.price = equipRow[2]
+        self.description = equipRow[3]
+        self.eSlot = equipRow[4]
+        self.aBonus = equipRow[5]
+        self.dBonus = equipRow[6]
+        self.mBonus = equipRow[7]
+        self.hitDodge = equipRow[8]
+        self.cBonus = equipRow[9]
+        cur.close()
 
     #showStats is used in a few places to display the equipment's stats. The eWpn passed in is the currently equipped weapon
     #to allow the player to compare the two pieces of gear 
@@ -119,16 +117,18 @@ class item():
         #imports all the data based on the iD field
         con = sqlite3.connect("strandedData.db")
         cur = con.cursor()
-        itemRow = cur.execute("SELECT itemID, name, canEquip, usable, description, power, rtype FROM entSpells WHERE itemID =", id).fetchall()[0]
+        itemRow = cur.execute("SELECT itemID, name, canEquip, usable, description, price, power, rtype FROM itemData WHERE itemID =", id).fetchall()[0]
         self.count = count
         self.itemID = itemRow[0]
         self.name = itemRow[1]
         self.canEquip = itemRow[2]
         self.usable = itemRow[3]
         self.description = itemRow[4]
-        self.power = itemRow[5]
-        self.rtype = itemRow[6]
+        self.price = itemRow[5]
+        self.power = itemRow[6]
+        self.rtype = itemRow[7]
         cur.close()
+        self.count = count
     #Item is exceedingly simple, this just changes how many you have.
     #Could possibly be changed to a list/dictionary
     def changeQuant(self, num):
@@ -137,65 +137,61 @@ class item():
 
 #pmember is one of the more important to be a class classes
 class pMember:
-    def __init__(self, Name, startAcc = "None" ):
-        #imports certain characteristics based on the charStats file
-        f = open("charStats.csv")
-        g = csv.DictReader(f)
-        for row in g:
-            if (row["Name"] == Name):
-                self.sprID = int(row["sprID"])
-                self.Name = Name
-                #All characters atm start at level 1 with 0 exp. May need an override
-                self.Level = 1
-                self.EXP = 0
-                #Every star has both bases and growths. Bases=LVL1 stats, growths=%chance to gain stat on LVL+
-                self.HP = int(row["HPBase"])
-                self.cHP = self.HP
-                self.MP = int(row["MPBase"])
-                self.cMP = self.MP
-                self.STR = int(row["STRBase"])
-                self.INT = int(row["INTBase"])
-                self.RES = int(row["RESBase"])                
-                self.CHA = int(row["CHABase"])
-                #the equipment slots are filled with equipment objects
-                self.eWpn = equipment(row["startWPN"])
-                self.eAmr = equipment(row["startAMR"])
-                self.eAcc = equipment(startAcc)
-                #changes what can be equipped
-                self.eType = row["eType"]
-                #the hero carries the party's cash and items. If not the hero, bCount is set to -1 to simplify debugging
-                if self.eType == "Hero":
-                    self.bCount = 0
-                    self.sCount = 0
-                else:
-                    self.bCount = -1
-                    self.sCount = -1
-                self.itemList = []
-                self.equipList = []
-                #startspells gets split or not depending on if the character has any
-                if row["startSpells"] == "None":
-                    self.spellList = []
-                else:
-                    self.spellList = row["startSpells"].split(",")
-                #growths are assembled into a list of staircasey summed numbers going up to 20. EG: [2, 4, 4, 4, 2, 4] becomes [2, 6, 10, 14, 16, 20]
-                HPGrow = int(row["HPGrow"])
-                MPGrow = int(row["MPGrow"]) + HPGrow
-                STRGrow = int(row["STRGrow"]) + MPGrow
-                INTGrow = int(row["INTGrow"]) + STRGrow
-                RESGrow = int(row["RESGrow"]) + INTGrow
-                CHAGrow = int(row["CHAGrow"]) + RESGrow
-                self.growths = [HPGrow, MPGrow, STRGrow, INTGrow, RESGrow, CHAGrow]
-                #extra data related to levelling up is imported
-                self.growCount = int(row["growCount"])
-                self.EXPRate = int(row["EXPRate"])
-                self.LVLCap = int(row["LVLCap"])
-                #composite stats. HIT, DODGE and CRIT must be at least 1, and while they can be above 20, this doesn't help the player
-                self.ATK = self.STR + self.eWpn.aBonus + self.eAmr.aBonus + self.eAcc.aBonus
-                self.DEF = self.eWpn.dBonus + self.eAmr.dBonus + self.eAcc.dBonus
-                self.mATK = self.INT + self.eWpn.mBonus + self.eAmr.mBonus + self.eAcc.mBonus
-                self.HIT = 1+self.eWpn.HIT
-                self.DODGE = 1+self.eWpn.eBonus + self.eAmr.eBonus + self.eAcc.eBonus
-                self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus
+    def __init__(self, entID):
+        #imports certain characteristics based on the database
+        con = sqlite3.connect("strandedData.db")
+        cur = con.cursor()
+        entData = cur.execute("SELECT * FROM entData WHERE entID =",entID).fetchall()[0]
+        self.sprID = entData[0]
+        self.entID = entData[1]
+        self.name = entData[2]
+        self.HP = entData[3]
+        self.cHP = self.HP
+        self.MP = entData[4]
+        self.cMP = self.MP
+        self.STR = entData[5]
+        self.RES = entData[6]
+        self.ITL = entData[7]
+        self.CHA = entData[8]
+        self.DEX = entData[9]
+        self.description = entData[13]
+#the equipment slots are filled with equipment objects
+        self.eWpn = equipment(9)
+        self.eAmr = equipment(10)
+        self.eAcc = equipment(11)
+        #the hero carries the party's cash and items. If not the hero, bCount is set to -1 to simplify debugging
+        if self.name == "Strandee":
+            self.bCount = 0
+            self.sCount = 0
+            self.eWpn = equipment(2)
+            self.eAmr = equipment(4)
+        else:
+            self.bCount = -1
+            self.sCount = -1
+        self.itemList = []
+        self.equipList = []
+        #startspells gets split or not depending on if the character has any
+        self.spellList = self.setSpells()
+        #growths are assembled into a list of staircasey summed numbers going up to 20. EG: [2, 4, 4, 4, 2, 4] becomes [2, 6, 10, 14, 16, 20]
+        HPGrow = entData[10]
+        MPGrow = entData[11]
+        STRGrow = entData[10]
+        INTGrow = entData[11]
+        RESGrow = entData[12]
+        CHAGrow = entData[12]
+        DEXGrow = entData[12]
+        cur.close()
+        self.growths = [HPGrow, MPGrow, STRGrow, INTGrow, RESGrow, CHAGrow, DEXGrow]
+        #composite stats. HIT, DODGE and CRIT must be at least 1, and while they can be above 20, this doesn't help the player
+        self.ATK = self.STR + self.eWpn.aBonus + self.eAmr.aBonus + self.eAcc.aBonus
+        self.DEF = self.eWpn.dBonus + self.eAmr.dBonus + self.eAcc.dBonus
+        self.mATK = self.ITL + self.eWpn.mBonus + self.eAmr.mBonus + self.eAcc.mBonus
+        self.HIT = 1+self.eWpn.hitDodge
+        self.DODGE = 1+self.eAmr.hitDodge
+        self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus
+
+    def setSpells(self):
+        pass
             
     #applies a level up
     def levelUp(self):
@@ -205,7 +201,7 @@ class pMember:
         print(self.Name, " levelled up!")
         #the for loop happens as many times as growcount, and decides based on the %s from earlier 6 stats to increase
         for i in range(self.growCount):
-            a = randint(1, 20)
+            a = randint(1, 10)
             if a <= self.growths[0]:
                 self.HP+=3
                 bonuses[0] +=3
@@ -226,6 +222,9 @@ class pMember:
             elif a <= self.growths[5]:
                 self.CHA += 1
                 bonuses[5] +=1
+            elif a <= self.growths[6]:
+                self.CHA += 1
+                bonuses[5] +=1
             else:
                 print("Error")
         #print a well laid out set of level up data
@@ -235,6 +234,7 @@ class pMember:
         print("INT+", bonuses[3], " (", self.INT,")")
         print("RES+", bonuses[4], " (", self.RES,")")
         print("CHA+", bonuses[5], " (", self.CHA,")")
+        print("DEX+",bonuses[5], " (", self.DEX,")")
         #stat change must be run here to fix the composite stats
         self.statChange()
         waitSpace()
@@ -256,8 +256,8 @@ class pMember:
         self.ATK = self.STR + self.eWpn.aBonus + self.eAmr.aBonus + self.eAcc.aBonus
         self.DEF = self.RES + self.eWpn.dBonus + self.eAmr.dBonus + self.eAcc.dBonus
         self.mATK = self.INT + self.eWpn.mBonus + self.eAmr.mBonus + self.eAcc.mBonus
-        self.HIT = 1+self.eWpn.HIT
-        self.DODGE = 1+self.eWpn.eBonus + self.eAmr.eBonus + self.eAcc.eBonus
+        self.HIT = 1+self.eWpn.hitDodge
+        self.DODGE = 1+self.eAmr.hitDodge
         self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus
     
     #a clone of the sprite printing method from strandedBattle, but due to being methodbound doesn't need a passed in sprID
@@ -421,13 +421,12 @@ def itemUseInventory(item, pLst):
     goBack = False
     oList = []
     #prints the item's name and description
-    print(item.Name, ":")
+    print(item.name, ":")
     print(item.description)
     #adds options to the list depending on if the item is usable/tossable
     if item.usable == True:
         oList.append("Use")
-    if item.tossable == True:
-        oList.append("Toss")
+    oList.append("Toss")
     oList.append("Back")
     #sets the point to clear the menu to, to avoid reprinting the above data
     cposits = returnCposits()
@@ -485,11 +484,11 @@ def partyChoice(item, pLst):
             return item, pLst
         #recover stats based on item type
         elif choice == -2:
-            if item.eType == "HP+":
+            if item.rtype == "hp":
                 pLst[cOption].heal(item.power, "hp")
-            elif item.eType == "MP+":
+            elif item.rtype == "mp":
                 pLst[cOption].heal(item.power, "mp")
-            elif item.eType == "HPMP+":
+            elif item.rtype == "hpmp":
                 pLst[cOption].heal(item.power, "hp")          
                 pLst[cOption].heal(item.power, "mp")
             waitSpace()
@@ -536,7 +535,7 @@ def equipView(pMember, equipInventory):
         clearToLine(cposits)
         print("-----------------")
         #makes a list of the member's equipment laid out in proper syntax
-        dLst = [("Weapon: " + pMember.eWpn.Name), ("Armour: " + pMember.eAmr.Name), ("Accessory: " + pMember.eAcc.Name)]
+        dLst = [("Weapon: " + pMember.eWpn.name), ("Armour: " + pMember.eAmr.name), ("Accessory: " + pMember.eAcc.name)]
         for i in range(3):
             cString = " "
             if cOption == i:
@@ -636,7 +635,8 @@ def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
                     pMember.eAmr = cLst[cOption-1]
                     e = pMember.eAmr
                 if eChoice == "Accessory":
-                    equipInventory.append(pMember.eAcc)
+                    if pMember.eAcc.name != 'None':
+                        equipInventory.append(pMember.eAcc)
                     pMember.eAcc = cLst[cOption-1]
                     e = pMember.eAcc
                 equipInventory.remove(cLst[cOption-1])
@@ -777,7 +777,7 @@ def chooseEncounter(dict, partyLst):
     #starts the battle, and begins the return chain to bring back the relevant info
     for line in dict:
         if int(line["EncID"]) == finalID:
-            return startEncounter([line["MemA"], line["MemB"], line["MemC"], line["MemD"]], partyLst)
+            return startEncounter([int(line["MemA"]), int(line["MemB"]), int(line["MemC"]), int(line["MemD"])], partyLst)
 
 
 #starts the battle with the chosen random encounter
@@ -785,7 +785,7 @@ def startEncounter(memLst, partyLst):
     enemLst = []
     #only makes an enemy if an actual enemy is in the slot rather than None
     for i in range(4):
-        if memLst[i] != "None":
+        if memLst[i] != 0:
             enemLst.append(enemy(memLst[i]))
     pLst = []
     for i in range(len(partyLst)):
@@ -1069,21 +1069,20 @@ def mapSave(mapName, mLayout, mData):
 def eventHandler(data, Iinventory, Einventory, bCount, sCount):
     areaChange = "None"
     fullHeal = False
-    #adds items in any quantity from 1-9 to the inventory
+    #adds items in any quantity from 1-9 to the inventory, or pieces of equipment
     if data[0] == "chestItem":
         soundMade("sfx/pickupCoin.wav")
         waitSpace()
         quant = int(data[1][-1])
-        dataName = data[1][:-1]
-        Iinventory.append(item(dataName, quant))
-        print("You found ", quant, " ", dataName, "(s)!")
+        dataID = int(data[1][:-1])
+        fItem = item(dataID, quant)
+        fName = fItem.name
+        if fItem.canEquip == 0:
+            Iinventory.append(fItem, quant)
+        else:
+            Einventory.append(equipment(fItem.itemID))
+        print("You found ", quant, " ", fName, "(s)!")
         Iinventory = combineStacks(Iinventory)
-        waitSpace()
-    #adds a single piece of equipment to the inventory
-    elif data[0] == "chestEquip":
-        dataName = data[1]
-        Einventory.append(equipment(dataName))
-        print("You found a ", dataName)
         waitSpace()
     #displays a single line of dialogue
     elif data[0] == "npc":
@@ -1093,7 +1092,7 @@ def eventHandler(data, Iinventory, Einventory, bCount, sCount):
     elif data[0] == "areaTrans":
         areaChange = data[1].split(",")
     elif data[0] == "shop":
-        x = shopMenu(data[1], Iinventory, Einventory, bCount, sCount)
+        x = shopMenu(int(data[1]), Iinventory, Einventory, bCount, sCount)
         Iinventory = x[0]
         Iinventory = combineStacks(Iinventory)
         Einventory = x[1]
@@ -1105,64 +1104,62 @@ def eventHandler(data, Iinventory, Einventory, bCount, sCount):
 
 #opens the menu for the item shop
 def shopMenu(data, Iinventory, Einventory, bCount, sCount):
-    with open("shopdata.csv") as shopdata:
-        shops = csv.DictReader(shopdata)
-        for row in shops:
-            if row["shopID"] == data:
-                shopDict = row
-    shopInv = list(shopDict["shopInventory"].split(","))
+    con = sqlite3.connect("strandedData.db")
+    cur = con.cursor()
+    shopData = cur.execute("SELECT shopID, shopData.entryText, shopData.currencTyp FROM shopItem INNER JOIN shopData ON shopItem.shopID = shopData.shopID WHERE shopID =", data).fetchall()[0]
+    shopRow = cur.execute("SELECT itemID FROM shopItem WHERE shopID =", data).fetchall()
+    cur.close()
+    shopItems = []
+    for i in range(len(shopRow)):
+        shopItems.append(item(shopRow[i][0]))
     shopContinuing = True
-    print(shopDict["shopText"])
+    print(shopData[1])
     cposits = returnCposits()
-    shopInvLst = []
-    for i in range(0,len(shopInv), 2):
-        if shopDict["shopType"] == "Item":
-            shopInvLst.append(item(shopInv[i], 1, int(shopInv[i+1])))  
-        elif shopDict["shopType"] == "Equipment":
-            shopInvLst.append(equipment(shopInv[i], int(shopInv[i+1]))) 
-    cOption = 0
     while(shopContinuing):
         clearToLine(cposits)
-        if shopDict["shopCurrency"] == "Sticks and Stones":
+        if shopData[1] == "s":
             print("Sticks and Stones: ", sCount)
-        elif shopDict["shopCurrency"] == "Blood and Bones":
+        elif shopData[1] == "b":
             print("Blood and Bones: ", bCount)
-        for i in range(len(shopInvLst)):
+        for i in range(len(shopItems)):
             cString = " "
             if i == cOption:
                 cString = ">"
-            cString+=shopInvLst[i].Name
+            cString+=shopItems[i].name
             for j in range(15-len(cString)):
                 cString+=" "
             cString+="||"
-            cString+= str(shopInvLst[i].cost)
+            cString+= str(shopItems[i].cost)
             cString+=" "
-            cString+=shopDict["shopCurrency"]
+            if shopData[1] == "s":
+                cString+="Sticks and Stones"
+            elif shopData[1] == "b":
+                cString+="Blood and Bones"
             print(cString)
-        choice = getMenuChoice(cOption, len(shopInvLst))
+        choice = getMenuChoice(cOption, len(shopItems))
         if choice == -1:
             return Iinventory, Einventory, bCount, sCount
         elif choice == -2:
-            if shopDict["shopCurrency"] == "Sticks and Stones":
-                if shopInvLst[cOption].cost <= sCount:
-                    print("You bought", shopInvLst[cOption].Name)
+            if shopData[1] == "s":
+                if shopItems[cOption].price <= sCount:
+                    print("You bought", shopItems[cOption].name)
                     waitSpace()
-                    if shopDict["shopType"] == "Item":
-                        Iinventory.append(shopInvLst[cOption])
-                    elif shopDict["shopType"] == "Equipment":
-                        Einventory.append(shopInvLst[cOption])
-                    sCount -= shopInvLst[cOption].cost
+                    if int(shopItems[cOption].canEquip) == 0:
+                        Iinventory.append(shopItems[cOption])
+                    if int(shopItems[cOption].canEquip) == 0:
+                        Einventory.append(equipment(shopItems[cOption].itemID))
+                    sCount -= shopItems[cOption].price
                 else:
                     print("You didn't have enough...")
                     waitSpace()
-            elif shopDict["shopCurrency"] == "Blood and Bones":
-                if shopInvLst[cOption].cost <= bCount:
-                    print("You bought", shopInvLst[cOption].Name)
-                    if shopDict["shopType"] == "Item":
-                        Iinventory.append(shopInvLst[cOption])
-                    elif shopDict["shopType"] == "Equipment":
-                        Einventory.append(shopInvLst[cOption])
-                    bCount -= shopInvLst[cOption].cost
+            elif shopData[1] == "b":
+                if shopData[cOption].price <= bCount:
+                    print("You bought", shopData[cOption].Name)
+                    if int(shopItems[cOption].canEquip) == 0:
+                        Iinventory.append(shopItems[cOption])
+                    if int(shopItems[cOption].canEquip) == 0:
+                        Einventory.append(equipment(shopItems[cOption].itemID))
+                    bCount -= shopItems[cOption].price
                 else:
                     print("You didn't have enough...")
             

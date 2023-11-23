@@ -7,7 +7,7 @@ def makedbntbls1():
      mpCost INT(2) NOT NULL, basePower INT(3) NOT NULL, multiPl DECIMAL(5,3) NOT NULL,
                 type VARCHAR(10) NOT NULL, target VARCHAR(10) NOT NULL, descP VARCHAR(100))""") 
     cur.execute("""
-                CREATE TABLE entData(entID INT(3) NOT NULL PRIMARY KEY, entName VARCHAR(20), HP INT(3),
+                CREATE TABLE entData(sprID INT(3), entID INT(3) NOT NULL PRIMARY KEY, entName VARCHAR(20), HP INT(3),
                  MP INT(3), STR INT(2), RES INT(2), ITL INT(2), CHA INT(2), DEX INT(2), 
                 physGrow INT(2), magGrow INT(2), finGrow INT(2), descP VARCHAR(100))
                 """)
@@ -27,9 +27,10 @@ def makedbntbls1():
                 """)
     
     cur.execute("""
-                INSERT INTO entData(entID, entName, HP, MP, STR, RES, ITL, CHA, DEX, physGrow, magGrow, finGrow, descP) VALUES
-                (1, 'Florp', 5, 6, 4, 0, 5, 5, 4, 2, 5, 3, 'A small, squishy bird-like creature preyed upon by most of the planets inhabitants'),
-                (2, 'Eyesoar', 8, 8, 3, 0, 0, 2, 5, 1, 7, 2, 'Hundreds of floating eyes. They regard most creatures coldly while floating out on unknowable errands')
+                INSERT INTO entData(sprID, entID, entName, HP, MP, STR, RES, ITL, CHA, DEX, physGrow, magGrow, finGrow, descP) VALUES
+                (1, 1, 'Florp', 5, 6, 4, 0, 5, 5, 4, 2, 5, 3, 'A small, squishy bird-like creature preyed upon by most of the planets inhabitants'),
+                (2, 2, 'Eyesoar', 8, 8, 3, 0, 0, 2, 5, 1, 7, 2, 'Hundreds of floating eyes. They regard most creatures coldly while floating out on unknowable errands'),
+                (0, 3, 'Strandee', 10, 0, 5, 0, 5, 0, 5, 0, 0, 0, 'Stranded after their escape from the dastardly damocles, their desire for revenge burns bright')
                 """)
     cur.execute("""
                 INSERT INTO entSpells(entID, spellID, spellRank) VALUES
@@ -50,7 +51,7 @@ def makedbntbls2():
     con = sqlite3.connect("strandedData.db")
     cur = con.cursor()
     cur.execute("CREATE TABLE itemData(itemID INT(3) NOT NULL PRIMARY KEY, name VARCHAR(30), canEquip BOOLEAN NOT NULL, usable BOOLEAN, price INT(4), description VARCHAR(100), power INT(3), rtype VARCHAR(4))")
-    cur.execute("CREATE TABLE equipData(itemID INT(3) NOT NULL, eSlot VARCHAR(10), aBonus INT(3), dBonus INT(3), mBonus INT(3), hitDodge INT(4), FOREIGN KEY(itemID) REFERENCES itemData(itemID))")
+    cur.execute("CREATE TABLE equipData(itemID INT(3) NOT NULL, eSlot VARCHAR(10), aBonus INT(3), dBonus INT(3), mBonus INT(3), hitDodge INT(4), cBonus INT(4), FOREIGN KEY(itemID) REFERENCES itemData(itemID))")
     cur.execute("CREATE TABLE shopData(shopID INT(3) NOT NULL PRIMARY KEY, entryText VARCHAR(100), currencTyp CHAR(1))")
     cur.execute("CREATE TABLE shopItem(itemID INT(3) NOT NULL, shopID INT(3) NOT NULL, FOREIGN KEY(itemID) REFERENCES itemData(itemID), FOREIGN KEY(shopID) REFERENCES shopData(shopID))")
     cur.execute("""INSERT INTO itemData VALUES
@@ -61,16 +62,33 @@ def makedbntbls2():
                 (5, 'Leather Jerkin', 1, 0, 60, 'Simple defensive armour made from florp leather', 0, ''),
                 (6, 'Iron Gauntlets', 1, 0, 40, 'These iron gloves deflect certain blows', 0, ''),
                 (7, 'Main-Gauche', 1, 0, 80, 'An offhand knife that raises attack power', 0, ''),
-                (8, 'Magic charm', 1, 0, 100, 'This handmade charm raises magical strength', 0, '')
+                (8, 'Magic charm', 1, 0, 100, 'This handmade charm raises magical strength', 0, ''),
+                (9, 'Beastial Power', 1, 0, 0, 'Every monster, from the lowliest florp to the mightiest beast has its own way to defend itself', 0, ''),
+                (10, 'Beastial Guard', 1, 0, 0, 'Every monster, from the lowliest florp to the mightiest beast has some kind of armour', 0, ''),
+                (11, 'None', 1, 0, 0, 'Nothing equipped', 0, '')
                 """)
     cur.execute("""INSERT INTO equipData VALUES
-                (2, 'Weapon', 5, 0, 0, 70),
-                (3, 'Weapon', 8, 0, 0, 85),
-                (4, 'Armour', 0, 0, 0, 10),
-                (5, 'Armour', 3, 0, 0, 20),
-                (6, 'Accessory', 0, 5, 0, 0), 
-                (7, 'Accessory', 5, 0, 0, 0),
-                (8, 'Accessory', 0, 0, 5, 0)""")
+                (2, 'Weapon', 5, 0, 0, 70, 4),
+                (3, 'Weapon', 8, 0, 0, 85, 0),
+                (4, 'Armour', 0, 0, 0, 10, 0),
+                (5, 'Armour', 3, 0, 0, 20, 0),
+                (6, 'Accessory', 0, 5, 0, 0, 0), 
+                (7, 'Accessory', 5, 0, 0, 0, 3),
+                (8, 'Accessory', 0, 0, 5, 0, 0),
+                (9, 'Weapon', 5, 0, 0, 85, 1),
+                (10, 'Armour', 2, 0, 0, 10, 0),
+                (11, 'Accessory', 0, 0, 0, 0, 0)
+                """)
+    cur.execute("""INSERT INTO shopData VALUES
+                (0, 'Welcome to my shop! We trade in blood and bones', 'b'),
+                (1, 'Welcome to my shop! We trade in sticks and stones', 's')
+                """)
+    cur.execute("""INSERT INTO shopItem VALUES
+                (5, 0),
+                (6, 0),
+                (7, 1),
+                (8, 1)
+                """)
     print(cur.execute("""SELECT * FROM itemData""").fetchall())
     print(cur.execute("""SELECT * FROM equipData""").fetchall())
     print(cur.execute("""SELECT * FROM shopData""").fetchall())

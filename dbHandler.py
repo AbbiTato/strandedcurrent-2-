@@ -14,6 +14,10 @@ def makedbntbls1():
     cur.execute("""CREATE TABLE entSpells(entID INT(3) NOT NULL, spellID INT(3) NOT NULL, spellRank INT(2),
                 FOREIGN KEY(entID) REFERENCES entData(entID), FOREIGN KEY(entID) REFERENCES entData(entID))
                 """)
+    cur.execute("CREATE TABLE itemData(itemID INT(3) NOT NULL PRIMARY KEY, name VARCHAR(30), canEquip BOOLEAN NOT NULL, usable BOOLEAN, price INT(4), descP VARCHAR(100), power INT(3), rtype VARCHAR(4))")
+    cur.execute("CREATE TABLE equipData(itemID INT(3) NOT NULL, eSlot VARCHAR(10), aBonus INT(3), dBonus INT(3), mBonus INT(3), hitDodge INT(4), cBonus INT(4), FOREIGN KEY(itemID) REFERENCES itemData(itemID))")
+    cur.execute("CREATE TABLE shopData(shopID INT(3) NOT NULL PRIMARY KEY, entryText VARCHAR(100), currencTyp CHAR(1))")
+    cur.execute("CREATE TABLE shopItem(itemID INT(3) NOT NULL, shopID INT(3) NOT NULL, FOREIGN KEY(itemID) REFERENCES itemData(itemID), FOREIGN KEY(shopID) REFERENCES shopData(shopID))")
     cur.execute("""
                 INSERT INTO spellData(spellID, spellName, mpCost, basePower, multiPl, type, target, descP) VALUES
                 (1, 'Bal', 2, 5, 2.0, 'DMG', 'enemOne', 'Attack one enemy with a small bolt of energy'),
@@ -34,27 +38,14 @@ def makedbntbls1():
                 """)
     cur.execute("""
                 INSERT INTO entSpells(entID, spellID, spellRank) VALUES
-                (1, 3, 0),
-                (1, 1, 1),
-                (1, 5, 2),
-                (2, 1, 0),
-                (2, 2, 1),
-                (2, 6, 2)
+                (1, 3, 1),
+                (1, 1, 2),
+                (1, 5, 3),
+                (2, 1, 1),
+                (2, 2, 2),
+                (2, 6, 3)
                 """)
-    con.commit()
-    print(cur.execute("SELECT spellID, spellName, basePower FROM spellData").fetchall())
-    print(cur.execute("SELECT entID, entName, MP FROM entData").fetchall())
-    print(cur.execute("SELECT spellID, entID, spellRank FROM entSpells").fetchall()[0][2])
-    cur.close()
-    
-def makedbntbls2():
-    con = sqlite3.connect("strandedData.db")
-    cur = con.cursor()
-    cur.execute("CREATE TABLE itemData(itemID INT(3) NOT NULL PRIMARY KEY, name VARCHAR(30), canEquip BOOLEAN NOT NULL, usable BOOLEAN, price INT(4), description VARCHAR(100), power INT(3), rtype VARCHAR(4))")
-    cur.execute("CREATE TABLE equipData(itemID INT(3) NOT NULL, eSlot VARCHAR(10), aBonus INT(3), dBonus INT(3), mBonus INT(3), hitDodge INT(4), cBonus INT(4), FOREIGN KEY(itemID) REFERENCES itemData(itemID))")
-    cur.execute("CREATE TABLE shopData(shopID INT(3) NOT NULL PRIMARY KEY, entryText VARCHAR(100), currencTyp CHAR(1))")
-    cur.execute("CREATE TABLE shopItem(itemID INT(3) NOT NULL, shopID INT(3) NOT NULL, FOREIGN KEY(itemID) REFERENCES itemData(itemID), FOREIGN KEY(shopID) REFERENCES shopData(shopID))")
-    cur.execute("""INSERT INTO itemData VALUES
+    cur.execute("""INSERT INTO itemData(itemID, name, canEquip, usable, price, descP, power, rtype) VALUES
                 (1, 'Healing Herb', 0, 1, 10, 'This simple herb is a fixture of the planets simple but effective herbal remedies', 30, 'hp'),
                 (2, 'Lead Pipe', 1, 0, 20, 'A heavy and inaccurate leaden pipe. A symbol of your furious rebellion', 0, ''),
                 (3, 'Spiked Branch', 1, 0, 50, 'Watch it with the spikes! An accurate and strong weapon', 0, ''),
@@ -67,23 +58,23 @@ def makedbntbls2():
                 (10, 'Beastial Guard', 1, 0, 0, 'Every monster, from the lowliest florp to the mightiest beast has some kind of armour', 0, ''),
                 (11, 'None', 1, 0, 0, 'Nothing equipped', 0, '')
                 """)
-    cur.execute("""INSERT INTO equipData VALUES
-                (2, 'Weapon', 5, 0, 0, 70, 4),
-                (3, 'Weapon', 8, 0, 0, 85, 0),
-                (4, 'Armour', 0, 0, 0, 10, 0),
-                (5, 'Armour', 3, 0, 0, 20, 0),
+    cur.execute("""INSERT INTO equipData(itemID, eSlot, aBonus, dBonus, mBonus, hitDodge, cBonus) VALUES
+                (2, 'Weapon', 5, 0, 0, 14, 4),
+                (3, 'Weapon', 8, 0, 0, 17, 0),
+                (4, 'Armour', 0, 0, 0, 2, 0),
+                (5, 'Armour', 3, 0, 0, 4, 0),
                 (6, 'Accessory', 0, 5, 0, 0, 0), 
                 (7, 'Accessory', 5, 0, 0, 0, 3),
                 (8, 'Accessory', 0, 0, 5, 0, 0),
-                (9, 'Weapon', 5, 0, 0, 85, 1),
-                (10, 'Armour', 2, 0, 0, 10, 0),
+                (9, 'Weapon', 5, 0, 0, 17, 1),
+                (10, 'Armour', 2, 0, 0, 2, 0),
                 (11, 'Accessory', 0, 0, 0, 0, 0)
                 """)
-    cur.execute("""INSERT INTO shopData VALUES
+    cur.execute("""INSERT INTO shopData(shopID, entryText, currencTyp) VALUES
                 (0, 'Welcome to my shop! We trade in blood and bones', 'b'),
                 (1, 'Welcome to my shop! We trade in sticks and stones', 's')
                 """)
-    cur.execute("""INSERT INTO shopItem VALUES
+    cur.execute("""INSERT INTO shopItem(itemID, shopID) VALUES
                 (5, 0),
                 (6, 0),
                 (7, 1),
@@ -91,9 +82,14 @@ def makedbntbls2():
                 """)
     print(cur.execute("""SELECT * FROM itemData""").fetchall())
     print(cur.execute("""SELECT * FROM equipData""").fetchall())
+    print(cur.execute("SELECT equipData.itemID, itemData.name, itemData.price, itemData.descP, eSlot, aBonus, dBonus, mBonus, hitDodge, cBonus FROM equipData INNER JOIN itemData ON equipData.itemID = itemData.itemID WHERE equipData.itemID =11").fetchall()[0])
     print(cur.execute("""SELECT * FROM shopData""").fetchall())
     print(cur.execute("""SELECT * FROM shopItem""").fetchall())
-
+    con.commit()
+    print(cur.execute("SELECT spellID, spellName, basePower FROM spellData").fetchall())
+    print(cur.execute("SELECT entID, entName, MP FROM entData").fetchall())
+    print(cur.execute("SELECT spellID, entID, spellRank FROM entSpells").fetchall()[0][2])
+    cur.close()
 
     
 def reversedbtbls():
@@ -132,4 +128,3 @@ def reversedbtbls():
     
 reversedbtbls()
 makedbntbls1()
-makedbntbls2()

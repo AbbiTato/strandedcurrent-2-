@@ -76,11 +76,11 @@ class equipment():
         ##import all the item data to the object with only the id field using SQL
         con = sqlite3.connect("strandedData.db")
         cur = con.cursor()
-        equipRow = cur.execute("SELECT equipData.itemID, itemData.name, itemData.price, itemData.description, eSlot, aBonus, dBonus, mBonus, hitDodge, cBonus FROM equipData INNER JOIN itemData ON equipData.itemID = itemData.itemID WHERE equipData.itemID =" + str(iD)).fetchall()[0] 
+        equipRow = cur.execute("SELECT equipData.itemID, itemData.name, itemData.price, itemData.descP, eSlot, aBonus, dBonus, mBonus, hitDodge, cBonus FROM equipData INNER JOIN itemData ON equipData.itemID = itemData.itemID WHERE equipData.itemID ="+str(iD)).fetchall()[0] 
         self.itemID = equipRow[0]
         self.name = equipRow[1]
         self.price = equipRow[2]
-        self.description = equipRow[3]
+        self.descP = equipRow[3]
         self.eSlot = equipRow[4]
         self.aBonus = equipRow[5]
         self.dBonus = equipRow[6]
@@ -101,12 +101,12 @@ class equipment():
             statString += "DEF + " + str(self.dBonus) + "(" + returnPlus(self.dBonus-eWpn.dBonus) + ") "
         if self.mBonus != 0:
             statString+= "mATK + " + str(self.mBonus) + "(" + returnPlus(self.dBonus-eWpn.dBonus) + ") "
-        if self.slot == "Weapon":
-            statString += "HIT: " + str(self.HIT * 5)+"%" + "(" + returnPlus((self.HIT*5)-(eWpn.HIT*5)) + "%) "
+        if self.eSlot == "Weapon":
+            statString += "HIT: " + str(self.hitDodge * 5)+"%" + "(" + returnPlus((self.hitDodge*5)-(eWpn.hitDodge*5)) + "%) "
         else:
-            statString += "HIT + " + str(self.HIT * 5)+"%" + "(" + returnPlus((self.HIT*5)-(eWpn.HIT*5)) + "%) "
-        if self.eBonus !=0:
-            statString += "DODGE + " + str(self.eBonus * 5) + "%" + "(" + returnPlus((self.eBonus *5)-(eWpn.eBonus * 5)) + "%) " 
+            statString += "HIT + " + str(self.hitDodge * 5)+"%" + "(" + returnPlus((self.hitDodge*5)-(eWpn.hitDodge*5)) + "%) "
+        if self.hitDodge !=0:
+            statString += "DODGE + " + str(self.hitDodge * 5) + "%" + "(" + returnPlus((self.hitDodge *5)-(eWpn.hitDodge * 5)) + "%) " 
         if self.cBonus !=0:
             statString += "CRIT + "  + str(self.cBonus * 5) + "%" + "(" + returnPlus((self.cBonus *5)-(eWpn.cBonus * 5)) + "%) "
         return statString
@@ -117,13 +117,13 @@ class item():
         #imports all the data based on the iD field
         con = sqlite3.connect("strandedData.db")
         cur = con.cursor()
-        itemRow = cur.execute("SELECT itemID, name, canEquip, usable, description, price, power, rtype FROM itemData WHERE itemID =", id).fetchall()[0]
+        itemRow = cur.execute("SELECT itemID, name, canEquip, usable, descP, price, power, rtype FROM itemData WHERE itemID =" + str(iD)).fetchall()[0]
         self.count = count
         self.itemID = itemRow[0]
         self.name = itemRow[1]
         self.canEquip = itemRow[2]
         self.usable = itemRow[3]
-        self.description = itemRow[4]
+        self.descP = itemRow[4]
         self.price = itemRow[5]
         self.power = itemRow[6]
         self.rtype = itemRow[7]
@@ -154,10 +154,10 @@ class pMember:
         self.ITL = entData[7]
         self.CHA = entData[8]
         self.DEX = entData[9]
-        self.description = entData[13]
+        self.descP = entData[13]
+        self.level = 1
+        self.EXP = 0
 #the equipment slots are filled with equipment objects
-        self.eWpn = equipment(9)
-        self.eAmr = equipment(10)
         self.eAcc = equipment(11)
         #the hero carries the party's cash and items. If not the hero, bCount is set to -1 to simplify debugging
         if self.name == "Strandee":
@@ -166,12 +166,15 @@ class pMember:
             self.eWpn = equipment(2)
             self.eAmr = equipment(4)
         else:
+            self.eWpn = equipment(9)
+            self.eAmr = equipment(10)
             self.bCount = -1
             self.sCount = -1
         self.itemList = []
         self.equipList = []
         #startspells gets split or not depending on if the character has any
-        self.spellList = self.setSpells()
+        self.spellList = []
+        self.setSpells()
         #growths are assembled into a list of staircasey summed numbers going up to 20. EG: [2, 4, 4, 4, 2, 4] becomes [2, 6, 10, 14, 16, 20]
         HPGrow = entData[10]
         MPGrow = entData[11]
@@ -186,19 +189,24 @@ class pMember:
         self.ATK = self.STR + self.eWpn.aBonus + self.eAmr.aBonus + self.eAcc.aBonus
         self.DEF = self.eWpn.dBonus + self.eAmr.dBonus + self.eAcc.dBonus
         self.mATK = self.ITL + self.eWpn.mBonus + self.eAmr.mBonus + self.eAcc.mBonus
-        self.HIT = 1+self.eWpn.hitDodge
-        self.DODGE = 1+self.eAmr.hitDodge
-        self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus
+        self.HIT = 1+self.eWpn.hitDodge + int(self.DEX/5)
+        self.DODGE = 1+self.eAmr.hitDodge + int(self.DEX/5)
+        self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus + int(self.DEX/5)
 
     def setSpells(self):
-        pass
+        con = sqlite3.connect("strandedData.db")
+        cur = con.cursor()
+        spellData = cur.execute("SELECT spellData.spellID FROM entSpells INNER JOIN spellData ON spellData.spellID = entSpells.spellID WHERE entSpells.entID ="+str(self.entID)+" AND entSpells.spellRank="+str(self.level)).fetchall()
+        for i in range(len(spellData)):
+            self.spellList.append(spellData[i][0])
+        
             
     #applies a level up
     def levelUp(self):
-        self.Level +=1
+        self.level +=1
         #the bonuses array is just to make the stat printing at the end less messy
         bonuses = [0, 0, 0, 0, 0, 0]
-        print(self.Name, " levelled up!")
+        print(self.name, " levelled up!")
         #the for loop happens as many times as growcount, and decides based on the %s from earlier 6 stats to increase
         for i in range(self.growCount):
             a = randint(1, 10)
@@ -214,7 +222,7 @@ class pMember:
                 self.STR += 1
                 bonuses[2] +=1
             elif a<= self.growths[3]:
-                self.INT += 1
+                self.ITL += 1
                 bonuses[3] +=1
             elif a<= self.growths[4]:
                 self.RES += 1
@@ -224,41 +232,42 @@ class pMember:
                 bonuses[5] +=1
             elif a <= self.growths[6]:
                 self.CHA += 1
-                bonuses[5] +=1
+                bonuses[6] +=1
             else:
                 print("Error")
         #print a well laid out set of level up data
         print("HP+", bonuses[0], " (", self.HP,")")
         print("MP+", bonuses[1], " (", self.MP,")")
         print("STR+", bonuses[2], " (", self.STR,")")
-        print("INT+", bonuses[3], " (", self.INT,")")
+        print("ITL+", bonuses[3], " (", self.ITL,")")
         print("RES+", bonuses[4], " (", self.RES,")")
         print("CHA+", bonuses[5], " (", self.CHA,")")
-        print("DEX+",bonuses[5], " (", self.DEX,")")
+        print("DEX+",bonuses[6], " (", self.DEX,")")
         #stat change must be run here to fix the composite stats
         self.statChange()
+        self.setSpells()
         waitSpace()
 
     #the only reason gainEXP needs to be a function is so that if the player gains more EXP than would be required to level up
     #the new EXP gets added to their total, and due to the function being recursive, can level up the player a second time        
     def gainEXP(self, gEXP):
-        if self.Level != self.LVLCap and gEXP!= 0:
+        if self.level != self.LVLCap and gEXP!= 0:
             self.EXP += gEXP
-            if self.EXP >= EXPvals[self.Level]:
+            if self.EXP >= EXPvals[self.level]:
                 self.levelUp()
                 oEXP = self.EXP
                 self.EXP = 0
-                self.gainEXP(oEXP - EXPvals[self.Level])
+                self.gainEXP(oEXP - EXPvals[self.level])
 
 
     #fixes the composite stats if the player's equipment changes
     def statChange(self):
         self.ATK = self.STR + self.eWpn.aBonus + self.eAmr.aBonus + self.eAcc.aBonus
         self.DEF = self.RES + self.eWpn.dBonus + self.eAmr.dBonus + self.eAcc.dBonus
-        self.mATK = self.INT + self.eWpn.mBonus + self.eAmr.mBonus + self.eAcc.mBonus
-        self.HIT = 1+self.eWpn.hitDodge
-        self.DODGE = 1+self.eAmr.hitDodge
-        self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus
+        self.mATK = self.ITL + self.eWpn.mBonus + self.eAmr.mBonus + self.eAcc.mBonus
+        self.HIT = 1+self.eWpn.hitDodge + int(self.DEX/5)
+        self.DODGE = 1+self.eAmr.hitDodge + int(self.DEX/5)
+        self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus + int(self.DEX/5)
     
     #a clone of the sprite printing method from strandedBattle, but due to being methodbound doesn't need a passed in sprID
     def returnspr(self, lst):
@@ -277,17 +286,17 @@ class pMember:
     def heal(self, power, hpmp):
         if hpmp == "hp":
             if (self.HP - self.cHP < power):
-                print(self.Name, " was fully healed!")
+                print(self.name, " was fully healed!")
                 self.cHP = self.HP
             else:
-                print(self.Name, "was healed by ", str(power), " points!")
+                print(self.name, "was healed by ", str(power), " points!")
                 self.cHP+=power
         elif hpmp == "mp":
             if (self.MP - self.cMP < power):
-                print(self.Name, "'s MP is fully recovered")
+                print(self.name, "'s MP is fully recovered")
                 self.cMP = self.MP
             else:
-                print(self.Name, "'s MP is recovered by ", str(power), " points!")
+                print(self.name, "'s MP is recovered by ", str(power), " points!")
                 self.cMP+=power
     
     #returns the % chances of dodging, critting and hitting. Used on several display screens
@@ -299,25 +308,25 @@ class pMember:
 
     #was surprised how simple this function turned out to be. Sets a new piece of equipment
     def equip(self, pEquip):
-        if pEquip.eType == "Weapon":
+        if pEquip.eSlot == "Weapon":
             self.eWpn = pEquip
-        elif pEquip.eType == "Armour":
+        elif pEquip.eSlot == "Armour":
             self.eAmr = pEquip
-        elif pEquip.eType == "Accessory":
+        elif pEquip.eSlot == "Accessory":
             self.eAcc = pEquip
         self.statChange()
     
     #a longass function which to summarise prints all the player's data to the screen
     def printStats(self):
-        print(self.Name, "  LVL:", self.Level)
-        print("EXP:", self.EXP, " To Next: ", (EXPvals[self.Level] - self.EXP))
+        print(self.name, "  LVL:", self.level)
+        print("EXP:", self.EXP, " To Next: ", (EXPvals[self.level] - self.EXP))
         if self.sCount != -1:
             print("Sticks and Stones: ", self.sCount)
             print("Blood and Bones: ", self.bCount)
         print(returnHPstring(self, True))
         print("MP: ", self.cMP, "/", self.MP)
         print("STR: ", self.STR)
-        print("INT: ", self.INT)
+        print("ITL: ", self.ITL)
         print("ATK: ", self.ATK)
         print("DEF: ", self.DEF)
         print("mATK: ", self.mATK)
@@ -326,12 +335,16 @@ class pMember:
         print("DODGE: ", a[1],"%")
         print("CRIT: ", a[2],"%")
         print("[[[SPELLS:]]]")
+        con = sqlite3.connect("strandedData.db")
+        cur = con.cursor()
         for spell in self.spellList:
-            print(spell)
+
+            print(cur.execute("SELECT spellName, mpCost, descP FROM spellData WHERE spellID =" +str(spell)).fetchall()[0])
+        cur.close()
     
     #when the battle starts, an Ally object is made using the pMember's data
     def makeCombattant(self):
-        return ally(self.sprID,self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT,  self.Level, self.CHA, self.spellList, self.bCount, self.sCount)
+        return ally(self.sprID,self.name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT,  self.level, self.CHA, self.spellList, self.bCount, self.sCount)
 
 
 
@@ -398,7 +411,7 @@ def itemLoop(itemInventory, pLst):
                     cString+=">"
                 else:
                     cString+=" "
-                cString+=itemInventory[i].Name
+                cString+=itemInventory[i].name
                 cString+=" x "
                 cString+=str(itemInventory[i].count)
                 print(cString)
@@ -420,9 +433,9 @@ def itemUseInventory(item, pLst):
     cOption = 0
     goBack = False
     oList = []
-    #prints the item's name and description
+    #prints the item's name and descP
     print(item.name, ":")
-    print(item.description)
+    print(item.descP)
     #adds options to the list depending on if the item is usable/tossable
     if item.usable == True:
         oList.append("Use")
@@ -475,7 +488,7 @@ def partyChoice(item, pLst):
             cString = " "
             if i == cOption:
                 cString = ">"
-            cString+=pLst[i].Name + " "
+            cString+=pLst[i].name + " "
             cString+=returnHPstring(pLst[i]) + " "
             cString+="MP: " + str(pLst[i].cMP) + "/" + str(pLst[i].MP)
             print(cString)
@@ -512,7 +525,7 @@ def equipLoop(pLst, equipInventory):
             cString = " "
             if i == cOption:
                 cString = ">"
-            cString+=pLst[i].Name
+            cString+=pLst[i].name
             print(cString)
         choice = getMenuChoice(cOption, len(pLst))
         if choice == -1:
@@ -581,65 +594,61 @@ def equipChangeMenu(pMember, equipInventory, eChoice, cpositx, cposity):
         print("")
         print("-----------------")
         pMember.equip(e)
-        cLst = []
+        totalLst = [e]
         #prints a list of all the equipment, with the currently equipped being preceeded with an E
-        for i in range(len(equipInventory)):
-            if (equipInventory[i].slot == eChoice and (equipInventory[i].eType == pMember.eType or equipInventory[i].eType == "All")):
-                cLst.append(equipInventory[i])
-        if cOption == 0:
-            print(">E ", e.Name)
+        if eChoice != "Accessory":
+            for i in range(len(equipInventory)):
+                if (equipInventory[i].eSlot == eChoice and pMember.name == "Strandee" ):
+                    totalLst.append(equipInventory[i])
         else:
-            print(" E ", e.Name)
+            for i in range(len(equipInventory)):
+                if (equipInventory[i].eSlot == eChoice):
+                    totalLst.append(equipInventory[i])
         #adds useful extra info to the ends of the equipment basd on if it's an improvement
-        for i in range(len(cLst)):
+        for i in range(len(totalLst)):
             cString = " "
-            if (i+1) == cOption:
+            if i == cOption:
                 cString = ">"
-            cString+=cLst[i].Name
+            if i == 0:
+                cString+="E "
+            cString+=totalLst[i].name
             if eChoice == "Weapon":
-                if(cLst[i].aBonus < e.aBonus):
+                if(totalLst[i].aBonus < totalLst[0].aBonus):
                     bText = "(-)"
-                elif(cLst[i].aBonus > e.aBonus):
+                elif(totalLst[i].aBonus > totalLst[0].aBonus):
                     bText = "(+)"
                 else:
                     bText = "(=)"
                 cString+=bText
             elif eChoice == "Armour":
-                if(cLst[i].dBonus < e.dBonus):
+                if(totalLst[i].dBonus < e.dBonus):
                     bText = "(-)"
-                elif(cLst[i].dBonus > e.dBonus):
+                elif(totalLst[i].dBonus > e.dBonus):
                     bText = "(+)"
                 else:
                     bText = "(=)"
                 cString+=bText
             print(cString)
-        #this code is semi-unnecessary but does fix a small bug
-        if cOption == 0:
-            print(e.showStats(e))
-            print(e.desc)
-        else:
-            print(cLst[cOption-1].showStats(e))
-            print(cLst[cOption-1].desc)
-        choice = getMenuChoice(cOption, (len(cLst)+1))
+        choice = getMenuChoice(cOption, len(totalLst))
         #swaps out the equipment chosen, and fixes all the necessary menus
         if choice == -1:
             goBack = True            
         elif choice == -2:
-            if cOption!=0:
-                if eChoice == "Weapon":
-                    equipInventory.append(pMember.eWpn)
-                    pMember.eWpn = cLst[cOption-1]
-                    e = pMember.eWpn
-                if eChoice == "Armour":
-                    equipInventory.append(pMember.eAmr)
-                    pMember.eAmr = cLst[cOption-1]
-                    e = pMember.eAmr
-                if eChoice == "Accessory":
-                    if pMember.eAcc.name != 'None':
-                        equipInventory.append(pMember.eAcc)
-                    pMember.eAcc = cLst[cOption-1]
-                    e = pMember.eAcc
-                equipInventory.remove(cLst[cOption-1])
+            if eChoice == "Weapon":
+                equipInventory.append(pMember.eWpn)
+                pMember.eWpn = totalLst[cOption]
+                e = pMember.eWpn
+            if eChoice == "Armour":
+                equipInventory.append(pMember.eAmr)
+                pMember.eAmr = totalLst[cOption]
+                e = pMember.eAmr
+            if eChoice == "Accessory":
+                if pMember.eAcc.name != 'None':
+                    equipInventory.append(pMember.eAcc)
+                pMember.eAcc = totalLst[cOption]
+                e = pMember.eAcc
+            equipInventory.remove(totalLst[cOption])
+            cOption = 0
         else:
             cOption = choice
     return pMember, equipInventory
@@ -1078,7 +1087,7 @@ def eventHandler(data, Iinventory, Einventory, bCount, sCount):
         fItem = item(dataID, quant)
         fName = fItem.name
         if fItem.canEquip == 0:
-            Iinventory.append(fItem, quant)
+            Iinventory.append(fItem)
         else:
             Einventory.append(equipment(fItem.itemID))
         print("You found ", quant, " ", fName, "(s)!")
@@ -1154,7 +1163,7 @@ def shopMenu(data, Iinventory, Einventory, bCount, sCount):
                     waitSpace()
             elif shopData[1] == "b":
                 if shopData[cOption].price <= bCount:
-                    print("You bought", shopData[cOption].Name)
+                    print("You bought", shopData[cOption].name)
                     if int(shopItems[cOption].canEquip) == 0:
                         Iinventory.append(shopItems[cOption])
                     if int(shopItems[cOption].canEquip) == 0:
@@ -1175,7 +1184,7 @@ def combineStacks(itemLst):
         x = itemLst[i]
         j = i+1
         while j<len(itemLst):
-            if itemLst[j].Name == x.Name:
+            if itemLst[j].name == x.name:
                 x.count+=itemLst[j].count
                 itemLst.pop(j)
             j+=1

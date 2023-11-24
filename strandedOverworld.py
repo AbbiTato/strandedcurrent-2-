@@ -76,7 +76,7 @@ class equipment():
         ##import all the item data to the object with only the id field using SQL
         con = sqlite3.connect("strandedData.db")
         cur = con.cursor()
-        equipRow = cur.execute("SELECT equipData.itemID, itemData.name, itemData.price, itemData.description, eSlot, aBonus, dBonus, mBonus, hitDodge, cBonus FROM equipData INNER JOIN itemData ON equipData.itemID = itemData.itemID WHERE equipData.itemID ="+str(iD)).fetchall()[0] 
+        equipRow = cur.execute("SELECT equipData.itemID, itemData.name, itemData.price, itemData.description, eSlot, aBonus, dBonus, mBonus, hitDodge, cBonus FROM equipData INNER JOIN itemData ON equipData.itemID = itemData.itemID WHERE equipData.itemID =" + str(iD)).fetchall()[0] 
         self.itemID = equipRow[0]
         self.name = equipRow[1]
         self.price = equipRow[2]
@@ -141,7 +141,7 @@ class pMember:
         #imports certain characteristics based on the database
         con = sqlite3.connect("strandedData.db")
         cur = con.cursor()
-        entData = cur.execute("SELECT * FROM entData WHERE entID ="+str(entID)).fetchall()[0]
+        entData = cur.execute("SELECT * FROM entData WHERE entID ="+ str(entID)).fetchall()[0]
         self.sprID = entData[0]
         self.entID = entData[1]
         self.name = entData[2]
@@ -155,7 +155,9 @@ class pMember:
         self.CHA = entData[8]
         self.DEX = entData[9]
         self.description = entData[13]
-        #the equipment slots are filled with equipment objects
+#the equipment slots are filled with equipment objects
+        self.eWpn = equipment(9)
+        self.eAmr = equipment(10)
         self.eAcc = equipment(11)
         #the hero carries the party's cash and items. If not the hero, bCount is set to -1 to simplify debugging
         if self.name == "Strandee":
@@ -164,24 +166,20 @@ class pMember:
             self.eWpn = equipment(2)
             self.eAmr = equipment(4)
         else:
-            self.eWpn = equipment(9)
-            self.eAmr = equipment(10)
             self.bCount = -1
             self.sCount = -1
-        self.level = 1
-        self.EXP = 0
         self.itemList = []
         self.equipList = []
         #startspells gets split or not depending on if the character has any
         self.spellList = self.setSpells()
         #growths are assembled into a list of staircasey summed numbers going up to 20. EG: [2, 4, 4, 4, 2, 4] becomes [2, 6, 10, 14, 16, 20]
-        HPGrow = entData[10] 
-        MPGrow = entData[11] + HPGrow
-        STRGrow = entData[10] + MPGrow
-        INTGrow = entData[11] + STRGrow
-        RESGrow = entData[12] + INTGrow
-        CHAGrow = entData[12] + RESGrow
-        DEXGrow = entData[12] + CHAGrow
+        HPGrow = entData[10]
+        MPGrow = entData[11]
+        STRGrow = entData[10]
+        INTGrow = entData[11]
+        RESGrow = entData[12]
+        CHAGrow = entData[12]
+        DEXGrow = entData[12]
         cur.close()
         self.growths = [HPGrow, MPGrow, STRGrow, INTGrow, RESGrow, CHAGrow, DEXGrow]
         #composite stats. HIT, DODGE and CRIT must be at least 1, and while they can be above 20, this doesn't help the player
@@ -200,10 +198,10 @@ class pMember:
         self.Level +=1
         #the bonuses array is just to make the stat printing at the end less messy
         bonuses = [0, 0, 0, 0, 0, 0]
-        print(self.name, " levelled up!")
+        print(self.Name, " levelled up!")
         #the for loop happens as many times as growcount, and decides based on the %s from earlier 6 stats to increase
         for i in range(self.growCount):
-            a = randint(1, 35)
+            a = randint(1, 10)
             if a <= self.growths[0]:
                 self.HP+=3
                 bonuses[0] +=3
@@ -225,8 +223,8 @@ class pMember:
                 self.CHA += 1
                 bonuses[5] +=1
             elif a <= self.growths[6]:
-                self.DEX += 1
-                bonuses[6] +=1
+                self.CHA += 1
+                bonuses[5] +=1
             else:
                 print("Error")
         #print a well laid out set of level up data
@@ -244,23 +242,23 @@ class pMember:
     #the only reason gainEXP needs to be a function is so that if the player gains more EXP than would be required to level up
     #the new EXP gets added to their total, and due to the function being recursive, can level up the player a second time        
     def gainEXP(self, gEXP):
-        if self.level != 20 and gEXP!= 0:
+        if self.Level != self.LVLCap and gEXP!= 0:
             self.EXP += gEXP
-            if self.EXP >= EXPvals[self.level]:
+            if self.EXP >= EXPvals[self.Level]:
                 self.levelUp()
                 oEXP = self.EXP
                 self.EXP = 0
-                self.gainEXP(oEXP - EXPvals[self.level])
+                self.gainEXP(oEXP - EXPvals[self.Level])
 
 
     #fixes the composite stats if the player's equipment changes
     def statChange(self):
         self.ATK = self.STR + self.eWpn.aBonus + self.eAmr.aBonus + self.eAcc.aBonus
         self.DEF = self.RES + self.eWpn.dBonus + self.eAmr.dBonus + self.eAcc.dBonus
-        self.mATK = self.ITL + self.eWpn.mBonus + self.eAmr.mBonus + self.eAcc.mBonus
-        self.HIT = 1+self.eWpn.hitDodge + self.DEX
-        self.DODGE = 1+self.eAmr.hitDodge + self.DEX
-        self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus + self.DEX
+        self.mATK = self.INT + self.eWpn.mBonus + self.eAmr.mBonus + self.eAcc.mBonus
+        self.HIT = 1+self.eWpn.hitDodge
+        self.DODGE = 1+self.eAmr.hitDodge
+        self.CRIT = 1+self.eWpn.cBonus + self.eAmr.cBonus + self.eAcc.cBonus
     
     #a clone of the sprite printing method from strandedBattle, but due to being methodbound doesn't need a passed in sprID
     def returnspr(self, lst):
@@ -317,29 +315,23 @@ class pMember:
             print("Sticks and Stones: ", self.sCount)
             print("Blood and Bones: ", self.bCount)
         print(returnHPstring(self, True))
-        print("MP   : ", self.cMP, "/", self.MP)
-        print("STR  : ", self.STR)
-        print("INT  : ", self.INT)
-        print("ATK  : ", self.ATK)
-        print("DEF  : ", self.DEF)
-        print("mATK : ", self.mATK)
-        print("DEX  : ", self.DEX)
+        print("MP: ", self.cMP, "/", self.MP)
+        print("STR: ", self.STR)
+        print("INT: ", self.INT)
+        print("ATK: ", self.ATK)
+        print("DEF: ", self.DEF)
+        print("mATK: ", self.mATK)
         a = self.returnPcentchances()
-        print("HIT  : ", a[0], "%")
+        print("HIT: ", a[0], "%")
         print("DODGE: ", a[1],"%")
-        print("CRIT : ", a[2],"%")
+        print("CRIT: ", a[2],"%")
         print("[[[SPELLS:]]]")
-        con = sqlite3.connect("strandedData.db")
-        cur = con.cursor()
-        spellLst = []
-        for i in range(len(self.spellList)):
-            spellLst.append(spellData = cur.execute("SELECT spellName, mpCost, descP FROM spellData WHERE spellName =", spellLst[i]).fetchall()[0])
-        for i in range(len(spellLst)):
-            print(spellLst[i][0], "|", spellLst[i][1], "|", spellLst[i][2])
+        for spell in self.spellList:
+            print(spell)
     
     #when the battle starts, an Ally object is made using the pMember's data
     def makeCombattant(self):
-        return ally(self.sprID,self.name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT,  self.level, self.CHA, self.DEX, self.spellList, self.bCount, self.sCount)
+        return ally(self.sprID,self.Name, self.HP, self.cHP, self.MP, self.cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT,  self.Level, self.CHA, self.spellList, self.bCount, self.sCount)
 
 
 

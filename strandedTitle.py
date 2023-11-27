@@ -4,6 +4,8 @@ import os
 import keyboard
 from strandedBattle import clearToLine, returnCposits, waitSpace
 from strandedOverworld import overWorldLoop
+import tkinter as tk
+from tkinter import filedialog
 import shutil
 
 cmd = 'mode 160,40'
@@ -11,6 +13,7 @@ os.system(cmd)
 stdscr = curses.initscr()
 curses.echo()
 curses.nocbreak()
+
 def print(*strings):
     strString = ""
     for string in strings:
@@ -46,6 +49,21 @@ def loadPlayerData(FileName):
         mapName = inp.readline().strip("\n")
     return pLst, mcpositx, mcposity, mapName
 
+def getEntry():
+    global ipt
+    ipt = e1.get()
+    window.destroy()
+
+def makeWindow():
+    global window
+    window = tk.Tk()
+    tk.Label(window, text="Enter your save name").grid(row=0)
+    global e1
+    e1 = tk.Entry(window)
+    e1.grid(row=0, column=1)
+    tk.Button(window, text="Enter", command=getEntry).grid(row=3,column=1,sticky=tk.W,pady=4)
+    tk.mainloop()
+
         
 #gives the opening text crawl, and starts the game
 def startGame(ipt):
@@ -78,11 +96,15 @@ while(running):
     event = keyboard.read_event()
     if event.event_type == keyboard.KEY_DOWN and event.name == 'n':
         print("What would you like to name your new save?")
-        ipt = stdscr.getstr().decode(encoding="utf-8")
+        makeWindow()
+        path = ipt
+        del ipt
+        del e1
+        del window
         #a new file is made with the maps and charStats
         try:
-            os.mkdir(ipt)
-            shutil.copytree("maps", (str(ipt)+"\\maps"))
+            os.mkdir(path)
+            shutil.copytree("maps", (str(path)+"\\maps"))
             print("File created!")
             running = False
         except:
@@ -91,15 +113,18 @@ while(running):
     ##will wait til a save file has been created adequately to add loading
     elif event.event_type == keyboard.KEY_DOWN and event.name == "l":
         print("What is the name of your file?")
-        ipt = stdscr.getstr().decode(encoding="utf-8")
-        if os.path.exists(ipt) == True:
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.askdirectory()
+        ipt = file_path
+        try:
             pData = loadPlayerData(ipt)
             overWorldLoop(ipt, pData[0], pData[1], pData[2], pData[3], False)
             waitSpace()
-        else:
+        except:
             print("Something went wrong... This file may not exist")
             waitSpace()
-startGame(ipt)
+startGame(path)
 
 
 

@@ -171,28 +171,29 @@ class pMember:
             self._eAmr = equipment(10)
             self._bCount = -1
             self._sCount = -1
+        #kept as public due to more complicated access requirements
         self.itemList = []
         self.equipList = []
         #startspells gets split or not depending on if the character has any (rewrite)
         self.spellList = []
         self.setSpells()
         #growths are assembled into a list of staircasey summed numbers going up to 20. EG: [2, 4, 4, 4, 2, 4] becomes [2, 6, 10, 14, 16, 20]
-        HPGrow = entData[10]
-        MPGrow = entData[11] + HPGrow
-        STRGrow = entData[10] + MPGrow
-        ITLGrow = entData[11] + STRGrow
-        RESGrow = entData[12] + ITLGrow
-        CHAGrow = entData[12] + RESGrow
-        DEXGrow = entData[12] + CHAGrow
+        __HPGrow = entData[10]
+        __MPGrow = entData[11] + __HPGrow
+        __STRGrow = entData[10] + __MPGrow
+        __ITLGrow = entData[11] + __STRGrow
+        __RESGrow = entData[12] + __ITLGrow
+        __CHAGrow = entData[12] + __RESGrow
+        __DEXGrow = entData[12] + __CHAGrow
         cur.close()
-        self.growths = [HPGrow, MPGrow, STRGrow, ITLGrow, RESGrow, CHAGrow, DEXGrow]
+        self.__growths = [__HPGrow, __MPGrow, __STRGrow, __ITLGrow, __RESGrow, __CHAGrow, __DEXGrow]
         #composite stats. HIT, DODGE and CRIT must be at least 1, and while they can be above 20, this doesn't help the player
-        self.ATK = self._STR + self._eWpn.aBonus + self._eAmr.aBonus + self._eAcc.aBonus
-        self.DEF = self._eWpn.dBonus + self._eAmr.dBonus + self._eAcc.dBonus
-        self.mATK = self._ITL + self._eWpn.mBonus + self._eAmr.mBonus + self._eAcc.mBonus
-        self.HIT = 1+self._eWpn.hitDodge + int(self._DEX/5)
-        self.DODGE = 1+self._eAmr.hitDodge + int(self._DEX/5)
-        self.CRIT = 1+self._eWpn.cBonus + self._eAmr.cBonus + self._eAcc.cBonus + int(self._DEX/5)
+        self._ATK = self._STR + self._eWpn.aBonus + self._eAmr.aBonus + self._eAcc.aBonus
+        self._DEF = self._eWpn.dBonus + self._eAmr.dBonus + self._eAcc.dBonus
+        self._mATK = self._ITL + self._eWpn.mBonus + self._eAmr.mBonus + self._eAcc.mBonus
+        self._HIT = 1+self._eWpn.hitDodge + int(self._DEX/5)
+        self._DODGE = 1+self._eAmr.hitDodge + int(self._DEX/5)
+        self._CRIT = 1+self._eWpn.cBonus + self._eAmr.cBonus + self._eAcc.cBonus + int(self._DEX/5)
     
     def getname(self):
         return self._name
@@ -245,9 +246,6 @@ class pMember:
     def setbCount(self, value):
         self._bCount = value  
 
-    
-        
-
     def setSpells(self):
         con = sqlite3.connect("strandedData.db")
         cur = con.cursor()
@@ -261,44 +259,44 @@ class pMember:
     def levelUp(self):
         self._level +=1
         #the bonuses array is just to make the stat printing at the end less messy
-        bonuses = [0, 0, 0, 0, 0, 0, 0]
+        __bonuses = [0, 0, 0, 0, 0, 0, 0]
         print(self._name, " levelled up!")
         #the for loop happens 5 times, and decides based on the %s from earlier 7 stats to increase
         for i in range(5):
-            a = randint(1, self.growths[6])
-            if a <= self.growths[0]:
+            a = randint(1, self.__growths[6])
+            if a <= self.__growths[0]:
                 self._HP+=3
-                bonuses[0] +=3
+                __bonuses[0] +=3
                 self._cHP = self._HP
-            elif a <= self.growths[1]:
+            elif a <= self.__growths[1]:
                 self._MP+=2
-                bonuses[1] +=2
+                __bonuses[1] +=2
                 self._cMP = self._MP
-            elif a<= self.growths[2]:
+            elif a<= self.__growths[2]:
                 self._STR += 1
-                bonuses[2] +=1
-            elif a<= self.growths[3]:
+                __bonuses[2] +=1
+            elif a<= self.__growths[3]:
                 self._ITL += 1
-                bonuses[3] +=1
-            elif a<= self.growths[4]:
+                __bonuses[3] +=1
+            elif a<= self.__growths[4]:
                 self._RES += 1
-                bonuses[4] +=1
-            elif a <= self.growths[5]:
+                __bonuses[4] +=1
+            elif a <= self.__growths[5]:
                 self._CHA += 1
-                bonuses[5] +=1
-            elif a <= self.growths[6]:
+                __bonuses[5] +=1
+            elif a <= self.__growths[6]:
                 self._DEX += 1
-                bonuses[6] +=1
+                __bonuses[6] +=1
             else:
                 print("Error")
         #print a well laid out set of level up data
-        print("HP+", bonuses[0], " (", self._HP,")")
-        print("MP+", bonuses[1], " (", self._MP,")")
-        print("STR+", bonuses[2], " (", self._STR,")")
-        print("ITL+", bonuses[3], " (", self._ITL,")")
-        print("RES+", bonuses[4], " (", self._RES,")")
-        print("CHA+", bonuses[5], " (", self._CHA,")")
-        print("DEX+",bonuses[6], " (", self._DEX,")")
+        print("HP+", __bonuses[0], " (", self._HP,")")
+        print("MP+", __bonuses[1], " (", self._MP,")")
+        print("STR+", __bonuses[2], " (", self._STR,")")
+        print("ITL+", __bonuses[3], " (", self._ITL,")")
+        print("RES+", __bonuses[4], " (", self._RES,")")
+        print("CHA+", __bonuses[5], " (", self._CHA,")")
+        print("DEX+",__bonuses[6], " (", self._DEX,")")
         #stat change must be run here to fix the composite stats
         self.statChange()
         self.setSpells()
@@ -313,17 +311,17 @@ class pMember:
                 self.levelUp()
                 oEXP = self._EXP
                 self._EXP = 0
-                self.gainEXP(oEXP - EXPvals[self._level])
+                self.gainEXP(oEXP - EXPvals[self._level-1])
 
 
     #fixes the composite stats if the player's equipment changes
     def statChange(self):
-        self.ATK = self._STR + self._eWpn.aBonus + self._eAmr.aBonus + self._eAcc.aBonus
-        self.DEF = self._RES + self._eWpn.dBonus + self._eAmr.dBonus + self._eAcc.dBonus
-        self.mATK = self._ITL + self._eWpn.mBonus + self._eAmr.mBonus + self._eAcc.mBonus
-        self.HIT = 1+self._eWpn.hitDodge + int(self._DEX/5)
-        self.DODGE = 1+self._eAmr.hitDodge + int(self._DEX/5)
-        self.CRIT = 1+self._eWpn.cBonus + self._eAmr.cBonus + self._eAcc.cBonus + int(self._DEX/5)
+        self._ATK = self._STR + self._eWpn.aBonus + self._eAmr.aBonus + self._eAcc.aBonus
+        self._DEF = self._RES + self._eWpn.dBonus + self._eAmr.dBonus + self._eAcc.dBonus
+        self._mATK = self._ITL + self._eWpn.mBonus + self._eAmr.mBonus + self._eAcc.mBonus
+        self._HIT = 1+self._eWpn.hitDodge + int(self._DEX/5)
+        self._DODGE = 1+self._eAmr.hitDodge + int(self._DEX/5)
+        self._CRIT = 1+self._eWpn.cBonus + self._eAmr.cBonus + self._eAcc.cBonus + int(self._DEX/5)
     
     #a clone of the sprite printing method from strandedBattle, but due to being methodbound doesn't need a passed in sprID
     def returnspr(self, lst):
@@ -357,9 +355,9 @@ class pMember:
     
     #returns the % chances of dodging, critting and hitting. Used on several display screens
     def returnPcentchances(self):
-        eChance = 5 * self.DODGE
-        cChance = 5 * self.CRIT
-        hChance = 5 * self.HIT
+        eChance = 5 * self._DODGE
+        cChance = 5 * self._CRIT
+        hChance = 5 * self._HIT
         return hChance, eChance, cChance
 
     #was surprised how simple this function turned out to be. Sets a new piece of equipment
@@ -383,9 +381,9 @@ class pMember:
         print("MP: ", self._cMP, "/", self._MP)
         print("STR: ", self._STR)
         print("ITL: ", self._ITL)
-        print("ATK: ", self.ATK)
-        print("DEF: ", self.DEF)
-        print("mATK: ", self.mATK)
+        print("ATK: ", self._ATK)
+        print("DEF: ", self._DEF)
+        print("mATK: ", self._mATK)
         a = self.returnPcentchances()
         print("HIT: ", a[0], "%")
         print("DODGE: ", a[1],"%")
@@ -399,7 +397,7 @@ class pMember:
     
     #when the battle starts, an Ally object is made using the pMember's data
     def makeCombattant(self):
-        return ally(self._sprID,self._name, self._HP, self._cHP, self._MP, self._cMP, self.ATK, self.DEF, self.mATK, self.HIT, self.DODGE, self.CRIT,  self._level, self._CHA, self.spellList, self._bCount, self._sCount)
+        return ally(self._sprID,self._name, self._HP, self._cHP, self._MP, self._cMP, self._ATK, self._DEF, self._mATK, self._HIT, self._DODGE, self._CRIT,  self._level, self._CHA, self.spellList, self._bCount, self._sCount)
 
 
 

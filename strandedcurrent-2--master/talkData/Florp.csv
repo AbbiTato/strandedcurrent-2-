@@ -1,0 +1,11 @@
+qNum,question,ansCorrect,ansNeutral,ansIncorrect
+0,Florp brings you a cool rock it found,Rub it against your face,Put it away in your bag,Throw it away
+1,"Florp pecks at you a little, drawing a tiny bit of blood5!",Don't react,Clutch your hand,Recoil in pain
+2,Florp inches a little closer,Stand your ground,Try to touch it,Take a step back
+3,Florp seems interested in your bag of food,Give it a lot9$,Give it a little1$,Give it none
+4,Florp is standing still,Move closer slowly,Stay where you are,Move closer quickly
+5,Florp seems wary of your weapons,Place them on the ground3%,Do nothing,Point them at florp
+6,"Florp sees your wounds, and rubs against them2!",Stay still4!,Move slightly,Move suddenly
+7,Florp seems relaxed,Rub the side of it's head,Do nothing,Rub it's stomach
+8,Florp looks at you with a serious expression,Smile softly,Return the look,Glare slightly
+9,Florp ruffles it's feathers,Look scared,Don't react,Laugh

@@ -215,7 +215,7 @@ class pMember:
     def setcMP(self, value):
         self._cMP = value
     
-    def geteAccc(self):
+    def geteAcc(self):
         return self._eAcc
     
     def seteAcc(self, value):
@@ -226,6 +226,12 @@ class pMember:
     
     def seteWpn(self, value):
         self._eWpn = value
+
+    def geteAmr(self):
+        return self._eAmr
+    
+    def seteAmr(self, value):
+        self._eAmr = value
     
     def getsCount(self):
         return self._sCount

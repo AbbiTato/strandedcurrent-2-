@@ -1,0 +1,6 @@
+Name,sprID,HP,MP,ATK,DEF,mATK,HIT,DODGE,CRIT,Mov1,Mov2,Mov3,Mov4,Mov5,Mov6,Mov7,Mov8,expYield,bYield,convType,demand,teachSpell
+Mousile,3,18,0,12,4,1,18,1,2,Attack,Attack,Attack,Attack,Attack,Attack,Attack,Attack,20,15,Herbivore,8,Fortify
+Florp,1,8,0,5,1,1,18,1,2,Attack,Attack,Attack,Attack,Attack,Attack,Attack,Attack,5,10,Carnivore,2,Cure
+Eyesoar,2,12,4,7,2,2,18,1,2,Attack,Attack,DefDown,DefDown,DefDown,DefDown,Attack,Attack,8,5,Carnivore,5,DefDown
+FlailTail,9,30,8,15,4,6,17,4,2,Attack,PowerUP,PowerUP,PowerUP,PowerUP,PowerUP,Attack,Attack,25,30,Herbivore,10,PowerUP
+Magus Florp,4,16,20,5,1,10,15,1,4,Attack,Blaze,Blaze,Blaze,Blaze,Blaze,Blaze,Blaze,30,20,Herbivore,12,Blaze

@@ -1,0 +1,3 @@
+shopID,shopText,shopType,shopCurrency,shopInventory
+0,Welcome to the test item shop my friend!,Item,Sticks and Stones,"HealingHerb,5,SoulDrop,20,MegaHerb,10000"
+1,Welcome to the test equipment shop my friend!,Equipment,Blood and Bones,"Small Rock,5,Protective Pads,20,Bone Stave,50"

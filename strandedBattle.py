@@ -295,6 +295,15 @@ class enemy(combattant):
     def getteachSpell(self):
         return self._teachSpell
     
+    def getteachSpellName(self):
+        con = sqlite3.connect("strandedData.db")
+        cur = con.cursor()
+        return cur.execute("SELECT spellName FROM spellData WHERE spellID ="+str(self._teachSpell)).fetchall()[0][0]
+
+    
+    def getconvType(self):
+        return self._convType
+    
 
     #selectAction chooses the enemy's action from their list of 8 possible actions       
     def selectAction(self, playerLst, enemLst):   
@@ -349,25 +358,24 @@ class ally(combattant):
         super().__init__(_sprID, _Name, _HP, _cHP, _MP, _cMP, _ATK, _DEF, _mATK, _HIT, _DODGE, _CRIT)
         self._spellList = _spellList
         self._Level = int(_Level)
-        self._CHA = _CHA
+        self._CHA = int(_CHA)
         if _bCount!=-1:
             self._bCount = _bCount
             self._sCount = _sCount
     #this function is only needed for the player. lets the player forget a spell if they already know 8 
     def learnSpell(self, spell):
-        if (spell in self.spellList):
+        if (spell in self._spellList):
             print("You already know that spell...")
             waitSpace()
         else:
-            if len(self.spellList) <8:
-                self.spellList.append(spell)
-                print("You learned ", spell)
+            if len(self._spellList) <8:
+                self._spellList.append(spell)
             else:
                 print("You can't learn any more spells! Which spell would you like to forget?")
                 running = True
                 cOption = 0
                 cPosits = returnCposits()
-                nineLst = self.spellList
+                nineLst = self._spellList
                 nineLst.append(spell)
                 while(running):
                     clearToLine(cPosits)
@@ -380,7 +388,7 @@ class ally(combattant):
                     choice = getMenuChoice(cOption, len(nineLst))
                     if choice == -2:
                         nineLst.pop(cOption)
-                        self.spellList = nineLst
+                        self._spellList = nineLst
                     else:
                         cOption = choice
     def getCHA(self):
@@ -397,7 +405,8 @@ class ally(combattant):
         self._sCount +=value
     def changebCount(self, value):
         self._bCount += value
-        
+    def setbCount(self, value):
+        self._bCount = value
 
 
 
@@ -589,8 +598,8 @@ def spellsMenu(caster, partyLst, enemLst):
     goBack = False
     cOption = 0
     cposits = returnCposits()
-    for i in range(len(caster.spellList)):
-        spellplist.append(getSpellProperties(caster.spellList[i]))
+    for i in range(len(caster.getspellList())):
+        spellplist.append(getSpellProperties(caster.getspellList()[i]))
     while(goBack == False):
         t = True
         clearToLine(cposits)
@@ -601,7 +610,7 @@ def spellsMenu(caster, partyLst, enemLst):
              else:
                  print(str(spellplist[i][0])+ "["+ str(spellplist[i][1])+ "]") 
         print("MP: "+str(caster.getcMP())+"/"+str(caster.getMP()))
-        choice = getMenuChoice(cOption, len(caster.spellList))
+        choice = getMenuChoice(cOption, len(caster.getspellList()))
         if choice==-1:
              return False
         elif choice == -2:
@@ -751,8 +760,10 @@ def battle(playerLst, enemLst, soundState):
                     #if the player can't finish talking to the enemy in the 10 questions they have due to low CHA, they can't start a conversation
                     if a.getdemand() / ((playerLst[0].getCHA()+1) / 5) > 10:
                         print("You don't think you know how to talk to this enemy yet...")
+                        waitSpace()
                     elif a.getdemand() == 99999999:
                         print("You already spoke to that enemy...")
+                        waitSpace()
                     else:
                         #opens convoMenu, if it is cancelled turn is not increased
                         x = convoMenu(a, playerLst[0])
@@ -789,12 +800,12 @@ def battle(playerLst, enemLst, soundState):
                 for i in range(len(enemLst)):
                     if enemLst[i].isDed() == False:
                         enemLst[i].selectAction(playerLst, enemLst) 
-                #once this occurs, if the player has died the application exits                                    
-                if(allDed(playerLst) == True):
-                    print("The party was defeated!")   
-                    print("You black out and lose half your blood, bones, sticks and stones...")                            
-                    waitSpace()
-                    return playerLst, totalEXP, totalB, "Lost"
+                        #once each action is chosen, if the player has died the application exits
+                        if(allDed(playerLst) == True):
+                            print("The party was defeated!")   
+                            print("You black out and lose half your blood, bones, sticks and stones...")                            
+                            waitSpace()
+                            return playerLst, totalEXP, totalB, "Lost"                                   
                 turn = 1
         #lets the menu loop around     
         if (cOption >= 5):                      
@@ -892,7 +903,7 @@ def convoMenu(target, mc):
                                 mc.changesCount(-(truDemand * mc.getLevel()))
                             #a spell is taught if the player requested it, invoking their class method
                             if dChoice == "Teach me a spell":
-                                print(target.getName() + "will teach you ", target.getteachSpell(), "!")
+                                print(target.getName() + "will teach you ", target.getteachSpellName(), "!")
                                 waitSpace()
                                 mc.learnSpell(target.getteachSpell())
                                 return mc, False

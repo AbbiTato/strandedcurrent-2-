@@ -108,6 +108,7 @@ while(running):
             os.mkdir(path)
             shutil.copytree("maps", (str(path)+"\\maps"))
             print("File created!")
+            waitSpace()
             startGame(path)
         except:
             print("Something went wrong... The game has closed: " + traceback.format_exc())
